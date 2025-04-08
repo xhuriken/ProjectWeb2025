@@ -101,6 +101,187 @@
                 </div>
             </div>
         </div>
+        <div class="card mt-5">
+            <div class="card-header">
+                <h3 class="card-title">Créer des groupes</h3>
+            </div>
+            <div class="card-body flex flex-col gap-5">
+                <form id="generateGroupsForm">
+                    <input type="hidden" name="cohort_id" value="{{ $cohort->id }}">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <x-forms.input name="nombre_groupes" label="Nombre de groupes" type="number" min="1" required/>
+                        <x-forms.input name="nombre_par_groupe" label="Nombre d'élèves par groupe" type="number" min="1" required/>
+                    </div>
+
+                    <div class="flex justify-end mt-4">
+                        <x-forms.primary-button type="submit">
+                            Générer les groupes
+                        </x-forms.primary-button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="generated-groups" class="mt-10 hidden">
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-xl font-bold">Groupes générés :</h2>
+                <div class="flex gap-4">
+                    <button id="saveGroups" class="btn btn-primary">Garder</button>
+                    <button id="regenerateGroups" class="btn btn-secondary">Régénérer</button>
+                </div>
+            </div>
+            <div id="groupsTable" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        let currentGroupsJson = null;
+
+        document.getElementById('generateGroupsForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const cohortId = this.querySelector('input[name="cohort_id"]').value;
+            const nombreGroupes = this.querySelector('input[name="nombre_groupes"]').value;
+            const nombreParGroupe = this.querySelector('input[name="nombre_par_groupe"]').value;
+
+            if (!nombreGroupes || !nombreParGroupe) {
+                Swal.fire('Erreur', 'Veuillez remplir tous les champs.', 'error');
+                return;
+            }
+
+            try {
+                Swal.fire({
+                    title: 'Génération des groupes en cours...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const response = await fetch(`/cohort/${cohortId}/generate-groups`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        nombre_groupes: nombreGroupes,
+                        nombre_par_groupe: nombreParGroupe
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    let cleanJson = result.groups
+                        .replace(/^```json\s*/i, '') // Supprime le début ```json
+                        .replace(/^```\s*/i, '')     // Supprime aussi si jamais il reste ```
+                        .replace(/```$/, '');        // Supprime la fin ``` si besoin
+
+                    currentGroupsJson = JSON.parse(cleanJson);
+                    renderGroups(currentGroupsJson);
+                    Swal.close();
+                }
+                else {
+                    Swal.fire('Erreur', result.message || 'Erreur inconnue.', 'error');
+                }
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Erreur', 'Une erreur est survenue.', 'error');
+            }
+        });
+
+        function renderGroups(data) {
+            const groupsTable = document.getElementById('groupsTable');
+            groupsTable.innerHTML = ''; // Nettoie tout
+
+            data.groupes.forEach(groupe => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'border p-4 rounded shadow';
+
+                let html = `
+            <h3 class="font-bold mb-2">Groupe ${groupe.numero} (Moyenne : ${groupe.moyenne_groupe.toFixed(2)})</h3>
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th>Note moyenne</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+                groupe.etudiants.forEach(etudiant => {
+                    html += `
+                <tr>
+                    <td>${etudiant.nom}</td>
+                    <td>${etudiant.prenom}</td>
+                    <td>${etudiant.average}</td>
+                </tr>
+            `;
+                });
+
+                html += `
+                </tbody>
+            </table>
+        `;
+
+                groupDiv.innerHTML = html;
+                groupsTable.appendChild(groupDiv);
+            });
+
+            document.getElementById('generated-groups').classList.remove('hidden');
+        }
+
+        // Gérer le bouton Régénérer
+        document.getElementById('regenerateGroups').addEventListener('click', () => {
+            document.getElementById('generated-groups').classList.add('hidden');
+            document.getElementById('groupsTable').innerHTML = '';
+            currentGroupsJson = null;
+        });
+
+        // Gérer le bouton Garder
+        document.getElementById('saveGroups').addEventListener('click', async () => {
+            if (!currentGroupsJson) {
+                Swal.fire('Erreur', 'Aucun groupe à sauvegarder.', 'error');
+                return;
+            }
+
+            try {
+                Swal.fire({
+                    title: 'Sauvegarde en cours...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const response = await fetch('/cohort/save-groups', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        groups: currentGroupsJson
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    Swal.fire('Succès', 'Groupes sauvegardés avec succès!', 'success');
+                } else {
+                    Swal.fire('Erreur', result.message || 'Erreur inconnue.', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Erreur', 'Erreur pendant la sauvegarde.', 'error');
+            }
+        });
+    </script>
+
     <!-- end: grid -->
 </x-app-layout>

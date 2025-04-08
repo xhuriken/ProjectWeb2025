@@ -21,6 +21,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::middleware('verified')->group(function () {
+
+        //
+        // Base Route (Made by Thibaud)
+        //
+
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -45,6 +50,20 @@ Route::middleware('auth')->group(function () {
 
         // Common life
         Route::get('common-life', [CommonLifeController::class, 'index'])->name('common-life.index');
+
+        //
+        // AI GEMINI
+        //
+
+        // Generate Groups
+        Route::post('/cohort/{cohort}/generate-groups', [\App\Http\Controllers\CohortController::class, 'generateGroups']);
+
+        // Save groups generate
+        Route::post('/cohort/save-groups', [CohortController::class, 'saveGroups']);
+
+        // Test AI (useless now)
+        Route::get('/test-gemini', [CohortController::class, 'testGemini']);
+
     });
 
 });

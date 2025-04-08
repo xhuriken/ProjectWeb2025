@@ -34,65 +34,67 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $user = User::create([
-            'last_name'     => 'Student',
-            'first_name'    => 'Student',
-            'email'         => 'student@codingfactory.com',
+            'last_name'     => 'Durand',
+            'first_name'    => 'Alice',
+            'email'         => 'alice.durand@codingfactory.com',
             'password'      => Hash::make('123456'),
+            'average'       => 14,
         ]);
 
         $user1 = User::create([
-            'last_name'     => 'Student1',
-            'first_name'    => 'Student',
-            'email'         => 'student1@codingfactory.com',
+            'last_name'     => 'Martin',
+            'first_name'    => 'Lucas',
+            'email'         => 'lucas.martin@codingfactory.com',
             'password'      => Hash::make('123456'),
+            'average'       => 12,
         ]);
 
         $user2 = User::create([
-            'last_name'     => 'Student2',
-            'first_name'    => 'Student',
-            'email'         => 'student2@codingfactory.com',
+            'last_name'     => 'Bernard',
+            'first_name'    => 'Emma',
+            'email'         => 'emma.bernard@codingfactory.com',
             'password'      => Hash::make('123456'),
-            'average'       =>  13,
+            'average'       => 13,
         ]);
+
         $user3 = User::create([
-            'last_name'     => 'Student3',
-            'first_name'    => 'Student',
-            'email'         => 'student3@codingfactory.com',
+            'last_name'     => 'Petit',
+            'first_name'    => 'Hugo',
+            'email'         => 'hugo.petit@codingfactory.com',
             'password'      => Hash::make('123456'),
-            'average'       =>  15,
-
+            'average'       => 15,
         ]);
+
         $user4 = User::create([
-            'last_name'     => 'Student4',
-            'first_name'    => 'Student',
-            'email'         => 'student4@codingfactory.com',
+            'last_name'     => 'Robert',
+            'first_name'    => 'Léa',
+            'email'         => 'lea.robert@codingfactory.com',
             'password'      => Hash::make('123456'),
-            'average'       =>  20,
-
+            'average'       => 20,
         ]);
+
         $user5 = User::create([
-            'last_name'     => 'Student5',
-            'first_name'    => 'Student',
-            'email'         => 'student5@codingfactory.com',
+            'last_name'     => 'Richard',
+            'first_name'    => 'Tom',
+            'email'         => 'tom.richard@codingfactory.com',
             'password'      => Hash::make('123456'),
-            'average'       =>  11,
-
+            'average'       => 11,
         ]);
+
         $user6 = User::create([
-            'last_name'     => 'Student6',
-            'first_name'    => 'Student',
-            'email'         => 'student6@codingfactory.com',
+            'last_name'     => 'Moreau',
+            'first_name'    => 'Chloé',
+            'email'         => 'chloe.moreau@codingfactory.com',
             'password'      => Hash::make('123456'),
-            'average'       =>  14,
-
+            'average'       => 14,
         ]);
-        $user7 = User::create([
-            'last_name'     => 'Student7',
-            'first_name'    => 'Student',
-            'email'         => 'student7@codingfactory.com',
-            'password'      => Hash::make('123456'),
-            'average'       =>  17,
 
+        $user7 = User::create([
+            'last_name'     => 'Simon',
+            'first_name'    => 'Nathan',
+            'email'         => 'nathan.simon@codingfactory.com',
+            'password'      => Hash::make('123456'),
+            'average'       => 17,
         ]);
 
         // Create the default school
