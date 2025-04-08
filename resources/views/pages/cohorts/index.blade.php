@@ -42,21 +42,24 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                        <td>
-                                            <div class="flex flex-col gap-2">
-                                                <a class="leading-none font-medium text-sm text-gray-900 hover:text-primary"
-                                                   href="{{ route('cohort.show', 1) }}">
-                                                    Promotion B1
-                                                </a>
-                                                <span class="text-2sm text-gray-700 font-normal leading-3">
-                                                    Cergy
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td>2024-2025</td>
-                                        <td>34</td>
-                                    </tr>
+                                        @foreach($cohorts as $cohort)
+                                            <tr>
+                                                <td>
+                                                    <div class="flex flex-col gap-2">
+                                                        <a class="leading-none font-medium text-sm text-gray-900 hover:text-primary"
+                                                           href="{{ route('cohort.show', 1) }}">
+                                                            {{$cohort->name}}
+                                                        </a>
+                                                        <span class="text-2sm text-gray-700 font-normal leading-3">
+                                                        {{$cohort->description}}
+                                                    </span>
+                                                    </div>
+                                                </td>
+                                                <td>{{ \Carbon\Carbon::parse($cohort->start_date)->format('Y') }} - {{ \Carbon\Carbon::parse($cohort->end_date)->format('Y') }}</td>
+
+                                                <td>{{$cohort->usersCount()}}</td>
+                                            </tr>
+                                        @endforeach
                                     </tbody>
                                 </table>
                             </div>
