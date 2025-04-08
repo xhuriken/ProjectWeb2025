@@ -41,14 +41,16 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                        <td>Doe</td>
-                                        <td>John</td>
-                                        <td>10/02/2000</td>
-                                        <td class="cursor-pointer pointer">
-                                            <i class="ki-filled ki-trash"></i>
-                                        </td>
-                                    </tr>
+                                        @foreach($users as $user)
+                                            <tr>
+                                                <td>{{$user->last_name}}</td>
+                                                <td>{{$user->first_name}}</td>
+                                                <td>{{$user->birth_date ? : "Pas définie"}}</td>
+                                                <td class="cursor-pointer pointer">
+                                                    <i class="ki-filled ki-trash"></i>
+                                                </td>
+                                            </tr>
+                                        @endforeach
                                     </tbody>
                                 </table>
                             </div>

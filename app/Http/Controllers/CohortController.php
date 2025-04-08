@@ -30,7 +30,8 @@ class CohortController extends Controller
     public function show(Cohort $cohort) {
 
         return view('pages.cohorts.show', [
-            'cohort' => $cohort
+            'cohort' => $cohort,
+            'users' => $cohort->users->filter()
         ]);
     }
 }

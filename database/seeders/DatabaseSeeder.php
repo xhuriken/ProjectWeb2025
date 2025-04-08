@@ -40,6 +40,44 @@ class DatabaseSeeder extends Seeder
             'password'      => Hash::make('123456'),
         ]);
 
+        $user1 = User::create([
+            'last_name'     => 'Student1',
+            'first_name'    => 'Student',
+            'email'         => 'student1@codingfactory.com',
+            'password'      => Hash::make('123456'),
+        ]);
+
+        $user2 = User::create([
+            'last_name'     => 'Student2',
+            'first_name'    => 'Student',
+            'email'         => 'student2@codingfactory.com',
+            'password'      => Hash::make('123456'),
+        ]);
+        $user3 = User::create([
+            'last_name'     => 'Student3',
+            'first_name'    => 'Student',
+            'email'         => 'student3@codingfactory.com',
+            'password'      => Hash::make('123456'),
+        ]);
+        $user4 = User::create([
+            'last_name'     => 'Student4',
+            'first_name'    => 'Student',
+            'email'         => 'student4@codingfactory.com',
+            'password'      => Hash::make('123456'),
+        ]);
+        $user5 = User::create([
+            'last_name'     => 'Student5',
+            'first_name'    => 'Student',
+            'email'         => 'student5@codingfactory.com',
+            'password'      => Hash::make('123456'),
+        ]);
+        $user6 = User::create([
+            'last_name'     => 'Student6',
+            'first_name'    => 'Student',
+            'email'         => 'student6@codingfactory.com',
+            'password'      => Hash::make('123456'),
+        ]);
+
         // Create the default school
         $school = School::create([
             'user_id'   => $user->id,
@@ -77,6 +115,30 @@ class DatabaseSeeder extends Seeder
 
         UserCohort::create([
             'user_id'   => $user->id,
+            'cohort_id' => $cohort->id,
+        ]);
+        UserCohort::create([
+            'user_id'   => $user1->id,
+            'cohort_id' => $cohort->id,
+        ]);
+        UserCohort::create([
+            'user_id'   => $user2->id,
+            'cohort_id' => $cohort->id,
+        ]);
+        UserCohort::create([
+            'user_id'   => $user3->id,
+            'cohort_id' => $cohort->id,
+        ]);
+        UserCohort::create([
+            'user_id'   => $user4->id,
+            'cohort_id' => $cohort->id,
+        ]);
+        UserCohort::create([
+            'user_id'   => $user5->id,
+            'cohort_id' => $cohort->id,
+        ]);
+        UserCohort::create([
+            'user_id'   => $user6->id,
             'cohort_id' => $cohort->id,
         ]);
     }
