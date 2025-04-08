@@ -52,30 +52,47 @@ class DatabaseSeeder extends Seeder
             'first_name'    => 'Student',
             'email'         => 'student2@codingfactory.com',
             'password'      => Hash::make('123456'),
+            'average'       =>  13,
         ]);
         $user3 = User::create([
             'last_name'     => 'Student3',
             'first_name'    => 'Student',
             'email'         => 'student3@codingfactory.com',
             'password'      => Hash::make('123456'),
+            'average'       =>  15,
+
         ]);
         $user4 = User::create([
             'last_name'     => 'Student4',
             'first_name'    => 'Student',
             'email'         => 'student4@codingfactory.com',
             'password'      => Hash::make('123456'),
+            'average'       =>  20,
+
         ]);
         $user5 = User::create([
             'last_name'     => 'Student5',
             'first_name'    => 'Student',
             'email'         => 'student5@codingfactory.com',
             'password'      => Hash::make('123456'),
+            'average'       =>  11,
+
         ]);
         $user6 = User::create([
             'last_name'     => 'Student6',
             'first_name'    => 'Student',
             'email'         => 'student6@codingfactory.com',
             'password'      => Hash::make('123456'),
+            'average'       =>  14,
+
+        ]);
+        $user7 = User::create([
+            'last_name'     => 'Student7',
+            'first_name'    => 'Student',
+            'email'         => 'student7@codingfactory.com',
+            'password'      => Hash::make('123456'),
+            'average'       =>  17,
+
         ]);
 
         // Create the default school
@@ -141,5 +158,10 @@ class DatabaseSeeder extends Seeder
             'user_id'   => $user6->id,
             'cohort_id' => $cohort->id,
         ]);
+        UserCohort::create([
+            'user_id'   => $user7->id,
+            'cohort_id' => $cohort->id,
+        ]);
+
     }
 }
