@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cohort;
 use App\Models\Retro;
+use App\Models\RetrosColumn;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
@@ -17,15 +18,17 @@ class RetroController extends Controller
      * @return Factory|View|Application|object
      */
     public function index() {
-        $retros = Retro::all();
-        return view('pages.retros.index', compact('retros'));
+        $retros = Retro::with('cohort')->get();
+
+        $cohorts = Cohort::all();
+
+        return view('pages.retros.index', compact('retros', 'cohorts'));
     }
 
 
     public function allRetrosAjaxData()
     {
-        $retros = Retro::with('columns.elements')->get();
-
+        $retros = Retro::with(['cohort', 'columns.elements'])->get();
         $formattedRetros = $retros->map(function($retro){
             $boards = $retro->columns->map(function($col){
                 $items = $col->elements->map(function($elem){
@@ -43,6 +46,7 @@ class RetroController extends Controller
 
             return [
                 'retro_id'    => $retro->id,
+                'cohort_name' => $retro->cohort ? $retro->cohort->name : '',
                 'retro_title' => $retro->title,
                 'boards'      => $boards->toArray()
             ];
@@ -53,8 +57,7 @@ class RetroController extends Controller
 
 
     /**
-     * Store
-     * INUSED
+     * Store new retro
      */
     public function ajaxStore(Request $request)
     {
@@ -82,41 +85,5 @@ class RetroController extends Controller
         ]);
     }
 
-    /**
-     * Get
-     * INUSED
-     */
-    public function ajaxData()
-    {
-        $retro = Retro::with('columns.elements')->latest()->first();
-
-        if (!$retro) {
-            return response()->json([
-                'boards' => []
-            ]);
-        }
-
-        $boards = [];
-        foreach ($retro->columns as $col) {
-            $items = [];
-            foreach ($col->elements as $elem) {
-                $items[] = [
-                    'id'    => $elem->id,
-                    'title' => $elem->title
-                ];
-            }
-
-            $boards[] = [
-                'id'    => 'column_' . $col->id,
-                'title' => $col->title,
-                'item'  => $items
-            ];
-        }
-
-        return response()->json([
-            'boards' => $boards,
-            'retro_title' => $retro->title,
-            'retro_id' => $retro->id
-        ]);
-    }
+    //need ajax for store new colomn and element !
 }

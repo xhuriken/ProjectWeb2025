@@ -10439,13 +10439,14 @@ process.umask = function() { return 0; };
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _bootstrap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
-/* harmony import */ var alpinejs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! alpinejs */ "./node_modules/alpinejs/dist/module.esm.js");
-/* harmony import */ var _kanban__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./kanban */ "./resources/js/kanban.js");
-/* harmony import */ var _kanban__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_kanban__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _kanban__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./kanban */ "./resources/js/kanban.js");
+/* harmony import */ var _kanban__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_kanban__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var alpinejs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! alpinejs */ "./node_modules/alpinejs/dist/module.esm.js");
 
 
-window.Alpine = alpinejs__WEBPACK_IMPORTED_MODULE_1__["default"];
-alpinejs__WEBPACK_IMPORTED_MODULE_1__["default"].start();
+
+window.Alpine = alpinejs__WEBPACK_IMPORTED_MODULE_2__["default"];
+alpinejs__WEBPACK_IMPORTED_MODULE_2__["default"].start();
 
 //Js for manage generation, (used in cohort > show.blade.php)
 // import './generationManager';
@@ -10475,58 +10476,143 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
   \********************************/
 /***/ (() => {
 
-document.addEventListener("DOMContentLoaded", function () {
+var KanbanConstructor = window.jKanban;
+var allKanbans = {};
+window.addColumn = addColumn;
+window.addElement = addElement;
+document.addEventListener('DOMContentLoaded', function () {
+  if (!window.allajax) {
+    console.warn('window.allajax (URL AJAX) est introuvable.');
+    return;
+  }
   fetch(window.allajax).then(function (response) {
     return response.json();
   }).then(function (retrosData) {
     retrosData.forEach(function (r) {
       var containerId = "kanban_" + r.retro_id;
-      var containerDiv = document.getElementById(containerId);
-      if (containerDiv) {
-        new jKanban({
+      var containerEl = document.getElementById(containerId);
+      if (containerEl) {
+        var kanbanInstance = new KanbanConstructor({
           element: "#" + containerId,
-          boards: r.boards
+          boards: r.boards || []
         });
+        allKanbans[r.retro_id] = kanbanInstance;
       } else {
-        console.warn("Pas de div correspondant à la rétro ID ", r.retro_id);
+        console.warn("Pas de conteneur pour rétro ID=", r.retro_id);
       }
     });
-  })["catch"](function (error) {
-    console.error("Erreur lors de la récupération des kanbans:", error);
+  })["catch"](function (err) {
+    console.error("Erreur lors de l'appel AJAX Kanban:", err);
   });
-
-  // var kabandiv = document.getElementById('myKanban');
-  // if(kabandiv == null) return;
-  //
-  //
-  // var kanban = new jKanban({
-  //     element: '#myKanban',
-  //     boards: [
-  //         {
-  //             'id'    : '_todo',
-  //             'title' : 'À faire',
-  //             'item'  : [
-  //                 { 'title': 'Tâche 1' },
-  //                 { 'title': 'Tâche 2' }
-  //             ]
-  //         },
-  //         {
-  //             'id'    : '_inprogress',
-  //             'title' : 'En cours',
-  //             'item'  : [
-  //                 { 'title': 'Tâche 3' }
-  //             ]
-  //         },
-  //         {
-  //             'id'    : '_done',
-  //             'title' : 'Terminé',
-  //             'item'  : [
-  //                 { 'title': 'Tâche 4' }
-  //             ]
-  //         }
-  //     ]
-  // });
+  var createBtn = document.getElementById("createRetroBtn");
+  if (!createBtn) return;
+  createBtn.addEventListener('click', function () {
+    var cohortId = document.getElementById("cohort_id").value;
+    var retroTitle = document.getElementById("retro_title").value.trim();
+    if (!cohortId || !retroTitle) {
+      alert("Merci de remplir le Cohort et le titre");
+      return;
+    }
+    fetch(window.storeRetroUrl, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': window.csrf,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        cohort_id: cohortId,
+        title: retroTitle
+      })
+    }).then(function (res) {
+      return res.json();
+    }).then(function (data) {
+      if (data.success) {
+        alert("Rétro créée avec succès !");
+        location.reload();
+      } else {
+        var _data$error;
+        alert("Erreur: " + ((_data$error = data.error) !== null && _data$error !== void 0 ? _data$error : "inconnue"));
+      }
+    })["catch"](function (err) {
+      console.error("Erreur lors de la création AJAX:", err);
+      alert("Une erreur est survenue en AJAX");
+    });
+  });
 });
+
+/**
+ *  addColumn to specific retro
+ */
+function addColumn(retroId) {
+  var kanban = allKanbans[retroId];
+  if (!kanban) {
+    console.error("Kanban introuvable pour la rétro ID=", retroId);
+    return;
+  }
+  Swal.fire({
+    title: 'Nouvelle colonne',
+    text: 'Entrez le nom de la colonne',
+    input: 'text',
+    showCancelButton: true,
+    confirmButtonText: 'Créer',
+    cancelButtonText: 'Annuler'
+  }).then(function (result) {
+    if (result.isConfirmed && result.value) {
+      var newColId = "column_" + Date.now();
+      kanban.addBoards([{
+        id: newColId,
+        title: result.value,
+        item: []
+      }]);
+    }
+  });
+}
+
+/**
+ * Add element to specific retro
+ * @param retroId
+ */
+function addElement(retroId) {
+  var kanban = allKanbans[retroId];
+  if (!kanban) {
+    console.error("Kanban introuvable pour la rétro ID=", retroId);
+    return;
+  }
+  var boardsInfo = kanban.options.boards || [];
+  var inputOptions = {};
+  boardsInfo.forEach(function (board) {
+    inputOptions[board.id] = board.title;
+  });
+  Swal.fire({
+    title: 'Nouvel élément',
+    text: 'Choisissez la colonne :',
+    input: 'select',
+    inputOptions: inputOptions,
+    inputPlaceholder: 'Sélectionnez une colonne',
+    showCancelButton: true,
+    confirmButtonText: 'Suivant',
+    cancelButtonText: 'Annuler'
+  }).then(function (colResult) {
+    if (colResult.isConfirmed && colResult.value) {
+      var chosenColId = colResult.value;
+      Swal.fire({
+        title: 'Titre de l’élément',
+        input: 'text',
+        showCancelButton: true,
+        confirmButtonText: 'Ajouter',
+        cancelButtonText: 'Annuler'
+      }).then(function (itemResult) {
+        if (itemResult.isConfirmed && itemResult.value) {
+          kanban.addElement(chosenColId, {
+            title: itemResult.value
+          });
+        }
+      });
+    }
+  });
+}
 
 /***/ }),
 

@@ -1,4 +1,5 @@
 import './bootstrap';
+import './kanban';
 
 import Alpine from 'alpinejs';
 
@@ -8,6 +9,5 @@ Alpine.start();
 
 //Js for manage generation, (used in cohort > show.blade.php)
 // import './generationManager';
-
 
 import './kanban';
