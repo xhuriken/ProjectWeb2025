@@ -10476,32 +10476,56 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 /***/ (() => {
 
 document.addEventListener("DOMContentLoaded", function () {
-  var kabandiv = document.getElementById('myKanban');
-  if (kabandiv == null) return;
-  var kanban = new jKanban({
-    element: '#myKanban',
-    boards: [{
-      'id': '_todo',
-      'title': 'À faire',
-      'item': [{
-        'title': 'Tâche 1'
-      }, {
-        'title': 'Tâche 2'
-      }]
-    }, {
-      'id': '_inprogress',
-      'title': 'En cours',
-      'item': [{
-        'title': 'Tâche 3'
-      }]
-    }, {
-      'id': '_done',
-      'title': 'Terminé',
-      'item': [{
-        'title': 'Tâche 4'
-      }]
-    }]
+  fetch(window.allajax).then(function (response) {
+    return response.json();
+  }).then(function (retrosData) {
+    retrosData.forEach(function (r) {
+      var containerId = "kanban_" + r.retro_id;
+      var containerDiv = document.getElementById(containerId);
+      if (containerDiv) {
+        new jKanban({
+          element: "#" + containerId,
+          boards: r.boards
+        });
+      } else {
+        console.warn("Pas de div correspondant à la rétro ID ", r.retro_id);
+      }
+    });
+  })["catch"](function (error) {
+    console.error("Erreur lors de la récupération des kanbans:", error);
   });
+
+  // var kabandiv = document.getElementById('myKanban');
+  // if(kabandiv == null) return;
+  //
+  //
+  // var kanban = new jKanban({
+  //     element: '#myKanban',
+  //     boards: [
+  //         {
+  //             'id'    : '_todo',
+  //             'title' : 'À faire',
+  //             'item'  : [
+  //                 { 'title': 'Tâche 1' },
+  //                 { 'title': 'Tâche 2' }
+  //             ]
+  //         },
+  //         {
+  //             'id'    : '_inprogress',
+  //             'title' : 'En cours',
+  //             'item'  : [
+  //                 { 'title': 'Tâche 3' }
+  //             ]
+  //         },
+  //         {
+  //             'id'    : '_done',
+  //             'title' : 'Terminé',
+  //             'item'  : [
+  //                 { 'title': 'Tâche 4' }
+  //             ]
+  //         }
+  //     ]
+  // });
 });
 
 /***/ }),

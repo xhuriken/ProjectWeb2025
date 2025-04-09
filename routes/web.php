@@ -45,9 +45,6 @@ Route::middleware('auth')->group(function () {
         // Groups
         Route::get('groups', [GroupController::class, 'index'])->name('group.index');
 
-        // Retro
-        route::get('retros', [RetroController::class, 'index'])->name('retro.index');
-
         // Common life
         Route::get('common-life', [CommonLifeController::class, 'index'])->name('common-life.index');
 
@@ -71,6 +68,18 @@ Route::middleware('auth')->group(function () {
         //Bonus : delete group generation:
         Route::delete('/cohort/{cohort}/delete-generation/{generation}', [CohortController::class, 'deleteGeneration'])->name('groups.deleteGeneration');
 
+
+        //
+        // RETRO
+        //
+        route::get('retros', [RetroController::class, 'index'])->name('retro.index');
+        Route::get('/retros/all-ajax-data', [RetroController::class, 'allRetrosAjaxData'])
+            ->name('retros.allAjaxData');
+        //store inused
+        Route::post('/retros/ajax-store', [RetroController::class, 'ajaxStore'])->name('retros.ajaxStore');
+
+        //get inused
+        Route::get('/retros/ajax-data', [RetroController::class, 'ajaxData'])->name('retros.ajaxData');
     });
 
 });
