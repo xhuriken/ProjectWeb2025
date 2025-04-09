@@ -11,8 +11,9 @@ return new class extends Migration
         Schema::create('groups', function (Blueprint $table) {
             $table->id();
             $table->foreignId('cohort_id')->constrained()->onDelete('cascade');
-            $table->unsignedInteger('numero');
-            $table->float('moyenne_groupe')->nullable();
+            $table->unsignedInteger('number')->nullable();
+            $table->float('average_group')->nullable();
+            $table->integer('generation')->integer(1);
             $table->timestamps();
         });
     }

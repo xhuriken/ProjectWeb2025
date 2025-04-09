@@ -64,6 +64,13 @@ Route::middleware('auth')->group(function () {
         // Test AI (useless now)
         Route::get('/test-gemini', [CohortController::class, 'testGemini']);
 
+        //
+        // GROUPS
+        //
+
+        //Bonus : delete group generation:
+        Route::delete('/cohort/{cohort}/delete-generation/{generation}', [CohortController::class, 'deleteGeneration'])->name('groups.deleteGeneration');
+
     });
 
 });

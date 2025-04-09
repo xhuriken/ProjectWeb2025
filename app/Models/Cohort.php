@@ -36,4 +36,13 @@ class Cohort extends Model
     {
         return $this->userCohorts()->count();
     }
+
+    /**
+     * Return all groups for this cohort
+     * @return HasMany
+     */
+    public function groups()
+    {
+        return $this->hasMany(Group::class);
+    }
 }
