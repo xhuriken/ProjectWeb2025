@@ -75,11 +75,11 @@ Route::middleware('auth')->group(function () {
         route::get('retros', [RetroController::class, 'index'])->name('retro.index');
         Route::get('/retros/all-ajax-data', [RetroController::class, 'allRetrosAjaxData'])
             ->name('retros.allAjaxData');
-        //store inused
         Route::post('/retros/ajax-store', [RetroController::class, 'ajaxStore'])->name('retros.ajaxStore');
-
-        //get inused
-        Route::get('/retros/ajax-data', [RetroController::class, 'ajaxData'])->name('retros.ajaxData');
+        Route::post('/retros/ajax-store-column', [RetroController::class, 'ajaxStoreColumn'])->name('retros.ajaxStoreColumn');
+        Route::post('/retros/ajax-store-element', [RetroController::class, 'ajaxStoreElement'])->name('retros.ajaxStoreElement');
+        Route::post('/retros/ajax-update-element-column', [RetroController::class, 'ajaxUpdateElementColumn'])
+            ->name('retros.ajaxUpdateElementColumn');
     });
 
 });

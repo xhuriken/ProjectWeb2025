@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cohort;
 use App\Models\Retro;
 use App\Models\RetrosColumn;
+use App\Models\RetrosElement;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
@@ -25,7 +26,10 @@ class RetroController extends Controller
         return view('pages.retros.index', compact('retros', 'cohorts'));
     }
 
-
+    /**
+     * Get all Retros and return them (for displaying it in blade)
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function allRetrosAjaxData()
     {
         $retros = Retro::with(['cohort', 'columns.elements'])->get();
@@ -57,7 +61,7 @@ class RetroController extends Controller
 
 
     /**
-     * Store new retro
+     * Store new retro (with default data)
      */
     public function ajaxStore(Request $request)
     {
@@ -71,7 +75,7 @@ class RetroController extends Controller
             'title'     => $request->title,
         ]);
 
-        $defaultColumns = ['À faire', 'En cours', 'Terminé'];
+        $defaultColumns = ['J\'ai aimé', 'Je n\'ai pas aimé', 'A améliorer', 'Inès', 'J\'ai appris', 'Autre..'];
         foreach ($defaultColumns as $colTitle) {
             RetrosColumn::create([
                 'retro_id' => $retro->id,
@@ -85,5 +89,73 @@ class RetroController extends Controller
         ]);
     }
 
-    //need ajax for store new colomn and element !
+    /**
+     * Store a new retro element in colomn
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function ajaxStoreElement(Request $request)
+    {
+        $request->validate([
+            'retro_id'     => 'required|exists:retros,id',
+            'column_id'    => 'required|exists:retros_columns,id',
+            'title'        => 'required|string|max:255'
+        ]);
+
+        $elem = RetrosElement::create([
+            'retro_id'         => $request->retro_id,
+            'retros_column_id' => $request->column_id,
+            'title'            => $request->title
+        ]);
+
+        return response()->json([
+            'success'    => true,
+            'element_id' => $elem->id
+        ]);
+    }
+
+    /**
+     * Store a new colomn in retros
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function ajaxStoreColumn(Request $request)
+    {
+        $request->validate([
+            'retro_id' => 'required|exists:retros,id',
+            'title'    => 'required|string|max:255'
+        ]);
+
+        $col = RetrosColumn::create([
+            'retro_id' => $request->retro_id,
+            'title'    => $request->title,
+        ]);
+
+        return response()->json([
+            'success'  => true,
+            'column_id'=> $col->id
+        ]);
+    }
+
+    /**
+     * Update element in new colomn (for drag and drop)
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function ajaxUpdateElementColumn(Request $request)
+    {
+        $request->validate([
+            'retro_id'   => 'required|exists:retros,id',
+            'element_id' => 'required|exists:retros_elements,id',
+            'column_id'  => 'required|exists:retros_columns,id',
+        ]);
+
+        $elem = RetrosElement::findOrFail($request->element_id);
+        $elem->retros_column_id = $request->column_id;
+        $elem->save();
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
 }

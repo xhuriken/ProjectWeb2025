@@ -19,7 +19,6 @@
     {{--    Plus tard : une liste de tout les kanban existant--}}
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jkanban/dist/jkanban.min.css">
-
     <div class="p-4 border-b mb-4">
         <h2 class="font-bold mb-2">Créer une nouvelle Rétro</h2>
         <select id="cohort_id" class="border p-1">
@@ -38,31 +37,32 @@
 
     @foreach($retros as $retro)
         <div class="mb-8 border-b p-4">
-            <!-- Name -->
             <h2 class="font-bold mb-2">
-{{--                Retro #{{ $retro->id }} - --}}
                 [{{ $retro->cohort->name ?? 'Sans Cohort' }}] - {{ $retro->title }}
             </h2>
 
-            <!-- Kanban div -->
             <div id="kanban_{{ $retro->id }}" class="kanban-container" style="min-height: 300px;"></div>
 
-            <!-- Btn Add COlomn element -->
             <div class="mt-2 flex gap-2">
                 <button onclick="addColumn({{ $retro->id }})"
                         class="bg-green-600 text-white px-3 py-1 rounded">
                     + Colonne
                 </button>
-                <button onclick="addElement({{ $retro->id }})"
-                        class="bg-gray-700 text-white px-3 py-1 rounded">
-                    + Élément
-                </button>
+{{--                <button onclick="addElement({{ $retro->id }})"--}}
+{{--                        class="bg-gray-700 text-white px-3 py-1 rounded">--}}
+{{--                    + Élément--}}
+{{--                </button>--}}
             </div>
         </div>
     @endforeach
+
     <script src="https://cdn.jsdelivr.net/npm/jkanban/dist/jkanban.min.js"></script>
+
     <script>
-        window.allajax = "{{ route('retros.allAjaxData') }}";
-        window.storeRetroUrl = "{{ route('retros.ajaxStore') }}";
+        window.allajax         = "{{ route('retros.allAjaxData') }}";
+        window.storeRetroUrl   = "{{ route('retros.ajaxStore') }}";
+        window.storeColumnUrl  = "{{ route('retros.ajaxStoreColumn') }}";
+        window.storeElementUrl = "{{ route('retros.ajaxStoreElement') }}";
+        window.updateElementUrl    = "{{ route('retros.ajaxUpdateElementColumn') }}";
     </script>
 </x-app-layout>

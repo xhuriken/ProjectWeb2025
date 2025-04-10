@@ -1,7 +1,9 @@
 let currentGroupsJson = null;
 
 document.addEventListener("DOMContentLoaded", (event) => {
-    document.getElementById('generateGroupsForm').addEventListener('submit', async function(e) {
+    form = document.getElementById('generateGroupsForm');
+    if(form == null) return;
+    form.addEventListener('submit', async function(e) {
         e.preventDefault();
         //prevent default et la page scroll encore en haut
         //en plus c'est pas un <a> c'est un btn submit
