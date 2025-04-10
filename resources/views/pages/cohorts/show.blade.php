@@ -167,5 +167,4 @@
         window.csrf = '{{ csrf_token() }}';
     </script>
 
-
 </x-app-layout>
