@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\AddCardEvent;
 use App\Models\Cohort;
 use App\Models\Retro;
 use App\Models\RetrosColumn;
@@ -11,6 +10,14 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
+
+use App\Events\AddCardEvent;
+use App\Events\DeleteCardEvent;
+use App\Events\MoveCardEvent;
+use App\Events\RenameCardEvent;
+use App\Events\AddColumnEvent;
+use App\Events\DeleteColumnEvent;
+
 
 class RetroController extends Controller
 {
@@ -140,6 +147,11 @@ class RetroController extends Controller
             'title'    => $request->title,
         ]);
 
+        event(new AddColumnEvent([
+            'id'    => $col->id,
+            'title' => $col->title
+        ]));
+
         return response()->json([
             'success'  => true,
             'column_id'=> $col->id
@@ -163,6 +175,11 @@ class RetroController extends Controller
         $elem->retros_column_id = $request->column_id;
         $elem->save();
 
+        event(new MoveCardEvent([
+            'id'        => $elem->id,
+            'column_id' => $request->column_id
+        ]));
+
         return response()->json([
             'success' => true
         ]);
@@ -177,6 +194,9 @@ class RetroController extends Controller
 
         RetrosColumn::destroy($request->column_id);
 
+        event(new DeleteColumnEvent([
+            'id' => $request->column_id
+        ]));
         return response()->json([
             'success' => true
         ]);
@@ -188,7 +208,16 @@ class RetroController extends Controller
             'element_id' => 'required|exists:retros_elements,id',
         ]);
 
-        RetrosElement::destroy($request->element_id);
+
+        $elem = RetrosElement::findOrFail($request->element_id);
+        $columnId = $elem->retros_column_id;
+
+        $elem->delete();
+
+        event(new DeleteCardEvent([
+            'id'        => $request->element_id,
+            'column_id' => $columnId
+        ]));
 
         return response()->json([
             'success' => true
@@ -210,6 +239,11 @@ class RetroController extends Controller
 
         $elem->title = $request->new_title;
         $elem->save();
+
+        event(new RenameCardEvent([
+            'id'    => $request->element_id,
+            'title' => $request->new_title
+        ]));
 
         return response()->json([
             'success' => true
