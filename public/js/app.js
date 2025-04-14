@@ -10732,16 +10732,6 @@ document.addEventListener('DOMContentLoaded', function () {
           propagationHandlers: []
         });
         allKanbans[r.retro_id] = kanbanInstance;
-
-        // // Double click: delete card.
-        // containerEl.addEventListener('dblclick', ev => {
-        //     const itemDom = ev.target.closest('.kanban-item');
-        //     if (!itemDom) return;
-        //     const itemId = itemDom.getAttribute('data-eid');
-        //     if (!itemId) return;
-        //     const elementDbId = itemId.replace('elem_', '');
-        //     deleteElement(itemDom, elementDbId, r.retro_id);
-        // });
       }
     });
   });
@@ -10897,12 +10887,6 @@ function editElement(itemDom, elementDbId, retroId) {
               if (instance) {
                 instance.removeElement(itemDom);
               }
-              Swal.fire({
-                icon: 'success',
-                title: 'Card deleted',
-                timer: 1500,
-                showConfirmButton: false
-              });
             } else {
               Swal.fire({
                 icon: 'error',
@@ -10934,12 +10918,6 @@ function editElement(itemDom, elementDbId, retroId) {
       }).then(function (data) {
         if (data.success) {
           itemDom.textContent = newText;
-          Swal.fire({
-            icon: 'success',
-            title: 'Card updated',
-            timer: 1500,
-            showConfirmButton: false
-          });
         } else {
           Swal.fire({
             icon: 'error',
@@ -11058,12 +11036,6 @@ function addElement(boardId, el) {
           instance.addElement(boardId, {
             id: 'elem_' + data.element_id,
             title: result.value
-          });
-          Swal.fire({
-            icon: 'success',
-            title: 'Card added',
-            timer: 2000,
-            showConfirmButton: false
           });
         } else {
           Swal.fire({
