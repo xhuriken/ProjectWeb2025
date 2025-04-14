@@ -291,9 +291,9 @@ function addColumn(retroId) {
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        const colDbId = data.column_id;
-                        const newBoardId = 'column_' + colDbId;
-                        kanban.addBoards([{ id: newBoardId, title: res.value, item: [] }]);
+                        // const colDbId = data.column_id;
+                        // const newBoardId = 'column_' + colDbId;
+                        // kanban.addBoards([{ id: newBoardId, title: res.value, item: [] }]);
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -347,8 +347,8 @@ function addElement(boardId, el) {
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        const instance = allKanbans[foundRetroId];
-                        instance.addElement(boardId, { id: 'elem_' + data.element_id, title: result.value });
+                        // const instance = allKanbans[foundRetroId];
+                        // instance.addElement(boardId, { id: 'elem_' + data.element_id, title: result.value });
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -410,30 +410,90 @@ const pusher = new Pusher('31eab710babcb78d914d', {
 const channel = pusher.subscribe('project-web');
 
 channel.bind('add-card', function(data) {
-    console.log('Pusher add-card event received:', data);
 
-    channel.bind('add-card', function(data) {
-        console.log('add-card event:', data);
+    console.log('add-card event:', data);
 
-        const card = data.card;
+    const card = data.card;
 
-        const boardId = 'column_' + card.column_id;
+    const boardId = 'column_' + card.column_id;
 
-        for (const retroId in allKanbans) {
-            const kanbanInstance = allKanbans[retroId];
+    for (const retroId in allKanbans) {
+        const kanbanInstance = allKanbans[retroId];
 
-            const foundBoard = kanbanInstance.options.boards.find(b => b.id === boardId);
+        const foundBoard = kanbanInstance.options.boards.find(b => b.id === boardId);
 
-            if (foundBoard) {
-                kanbanInstance.addElement(boardId, {
-                    id: 'elem_' + card.id,
-                    title: card.title
-                });
+        if (foundBoard) {
+            kanbanInstance.addElement(boardId, {
+                id: 'elem_' + card.id,
+                title: card.title
+            });
 
-                console.log('Carte ajouter mon frrr dans : ', boardId);
-                break;
+            console.log('Carte ajouter mon frrr dans : ', boardId);
+            break;
+        }
+    }
+
+});
+
+/*
+  delete-card
+  We remove the card from its board
+*/
+channel.bind('delete-card', function(data) {
+    console.log('[Pusher] delete-card:', data);
+    const card = data.card;
+    if (!card) return;
+
+    const boardId = 'column_' + card.column_id;
+    for (const retroId in allKanbans) {
+        const kanbanInstance = allKanbans[retroId];
+        const foundBoard = kanbanInstance.options.boards.find(b => b.id === boardId);
+        if (foundBoard) {
+            const items = kanbanInstance.getBoardElements(boardId);
+            for (const item of items) {
+                if (item.getAttribute('data-eid') === 'elem_' + card.id) {
+                    kanbanInstance.removeElement(item);
+                    break;
+                }
             }
         }
-    });
+    }
+});
 
+
+
+/*
+  add-column
+  We create a new board in the Kanban
+*/
+channel.bind('add-column', function(data) {
+    console.log('[Pusher] add-column:', data);
+    const column = data.column;
+    if (!column) return;
+
+    // If needed, check retro id. For now, we add to all Kanbans
+    for (const retroId in allKanbans) {
+        const kanbanInstance = allKanbans[retroId];
+        kanbanInstance.addBoards([{
+            id: 'column_' + column.id,
+            title: column.title,
+            item: []
+        }]);
+    }
+});
+
+/*
+  delete-column
+  We remove the board from the Kanban
+*/
+channel.bind('delete-column', function(data) {
+    console.log('[Pusher] delete-column:', data);
+    const column = data.column;
+    if (!column) return;
+
+    for (const retroId in allKanbans) {
+        const kanbanInstance = allKanbans[retroId];
+        const boardId = 'column_' + column.id;
+        kanbanInstance.removeBoard(boardId);
+    }
 });

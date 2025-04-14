@@ -10659,6 +10659,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
   \********************************/
 /***/ (() => {
 
+function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 // Create a Kanban instance using jKanban and store all instances by retro ID.
 var KanbanConstructor = window.jKanban;
 var allKanbans = {};
@@ -10959,13 +10962,9 @@ function addColumn(retroId) {
         return r.json();
       }).then(function (data) {
         if (data.success) {
-          var colDbId = data.column_id;
-          var newBoardId = 'column_' + colDbId;
-          kanban.addBoards([{
-            id: newBoardId,
-            title: res.value,
-            item: []
-          }]);
+          // const colDbId = data.column_id;
+          // const newBoardId = 'column_' + colDbId;
+          // kanban.addBoards([{ id: newBoardId, title: res.value, item: [] }]);
         } else {
           Swal.fire({
             icon: 'error',
@@ -11022,11 +11021,8 @@ function addElement(boardId, el) {
         return r.json();
       }).then(function (data) {
         if (data.success) {
-          var instance = allKanbans[foundRetroId];
-          instance.addElement(boardId, {
-            id: 'elem_' + data.element_id,
-            title: result.value
-          });
+          // const instance = allKanbans[foundRetroId];
+          // instance.addElement(boardId, { id: 'elem_' + data.element_id, title: result.value });
         } else {
           Swal.fire({
             icon: 'error',
@@ -11085,26 +11081,93 @@ var pusher = new Pusher('31eab710babcb78d914d', {
 });
 var channel = pusher.subscribe('project-web');
 channel.bind('add-card', function (data) {
-  console.log('Pusher add-card event received:', data);
-  channel.bind('add-card', function (data) {
-    console.log('add-card event:', data);
-    var card = data.card;
-    var boardId = 'column_' + card.column_id;
-    for (var retroId in allKanbans) {
-      var kanbanInstance = allKanbans[retroId];
-      var foundBoard = kanbanInstance.options.boards.find(function (b) {
-        return b.id === boardId;
+  console.log('add-card event:', data);
+  var card = data.card;
+  var boardId = 'column_' + card.column_id;
+  for (var retroId in allKanbans) {
+    var kanbanInstance = allKanbans[retroId];
+    var foundBoard = kanbanInstance.options.boards.find(function (b) {
+      return b.id === boardId;
+    });
+    if (foundBoard) {
+      kanbanInstance.addElement(boardId, {
+        id: 'elem_' + card.id,
+        title: card.title
       });
-      if (foundBoard) {
-        kanbanInstance.addElement(boardId, {
-          id: 'elem_' + card.id,
-          title: card.title
-        });
-        console.log('Carte ajouter mon frrr dans : ', boardId);
-        break;
+      console.log('Carte ajouter mon frrr dans : ', boardId);
+      break;
+    }
+  }
+});
+
+/*
+  delete-card
+  We remove the card from its board
+*/
+channel.bind('delete-card', function (data) {
+  console.log('[Pusher] delete-card:', data);
+  var card = data.card;
+  if (!card) return;
+  var boardId = 'column_' + card.column_id;
+  for (var retroId in allKanbans) {
+    var kanbanInstance = allKanbans[retroId];
+    var foundBoard = kanbanInstance.options.boards.find(function (b) {
+      return b.id === boardId;
+    });
+    if (foundBoard) {
+      var items = kanbanInstance.getBoardElements(boardId);
+      var _iterator = _createForOfIteratorHelper(items),
+        _step;
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var item = _step.value;
+          if (item.getAttribute('data-eid') === 'elem_' + card.id) {
+            kanbanInstance.removeElement(item);
+            break;
+          }
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
       }
     }
-  });
+  }
+});
+
+/*
+  add-column
+  We create a new board in the Kanban
+*/
+channel.bind('add-column', function (data) {
+  console.log('[Pusher] add-column:', data);
+  var column = data.column;
+  if (!column) return;
+
+  // If needed, check retro id. For now, we add to all Kanbans
+  for (var retroId in allKanbans) {
+    var kanbanInstance = allKanbans[retroId];
+    kanbanInstance.addBoards([{
+      id: 'column_' + column.id,
+      title: column.title,
+      item: []
+    }]);
+  }
+});
+
+/*
+  delete-column
+  We remove the board from the Kanban
+*/
+channel.bind('delete-column', function (data) {
+  console.log('[Pusher] delete-column:', data);
+  var column = data.column;
+  if (!column) return;
+  for (var retroId in allKanbans) {
+    var kanbanInstance = allKanbans[retroId];
+    var boardId = 'column_' + column.id;
+    kanbanInstance.removeBoard(boardId);
+  }
 });
 
 /***/ }),
