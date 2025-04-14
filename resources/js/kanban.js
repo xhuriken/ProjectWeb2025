@@ -398,3 +398,42 @@ function updateCardToDB(boardDiv, elementId) {
         })
         .catch(err => console.error(err));
 }
+
+
+
+
+//PUSHER !!
+const pusher = new Pusher('31eab710babcb78d914d', {
+    cluster: 'eu'
+});
+
+const channel = pusher.subscribe('project-web');
+
+channel.bind('add-card', function(data) {
+    console.log('Pusher add-card event received:', data);
+
+    channel.bind('add-card', function(data) {
+        console.log('add-card event:', data);
+
+        const card = data.card;
+
+        const boardId = 'column_' + card.column_id;
+
+        for (const retroId in allKanbans) {
+            const kanbanInstance = allKanbans[retroId];
+
+            const foundBoard = kanbanInstance.options.boards.find(b => b.id === boardId);
+
+            if (foundBoard) {
+                kanbanInstance.addElement(boardId, {
+                    id: 'elem_' + card.id,
+                    title: card.title
+                });
+
+                console.log('Carte ajouter mon frrr dans : ', boardId);
+                break;
+            }
+        }
+    });
+
+});

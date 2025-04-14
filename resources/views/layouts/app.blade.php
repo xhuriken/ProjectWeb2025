@@ -11,7 +11,25 @@
     <link href="{{ asset('metronic/vendors/apexcharts/apexcharts.css') }}" rel="stylesheet"/>
     <link href="{{ asset('metronic/vendors/keenicons/styles.bundle.css') }}" rel="stylesheet"/>
     <link href="{{ asset('metronic/css/styles.css') }}" rel="stylesheet"/>
+    <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+    <script>
+        // Enable pusher logging - don't include this in production
+        Pusher.logToConsole = true;
+        //
+        // var pusher = new Pusher('31eab710babcb78d914d', {
+        //     cluster: 'eu'
+        // });
+        //
+        // var channel = pusher.subscribe('project-web');
+        // channel.bind('kanban', function(data) {
+        //     alert(JSON.stringify(data));
+        // });
+
+
+    </script>
 </head>
 <body class="antialiased flex h-full text-base text-gray-700 [--tw-page-bg:#F6F6F9] [--tw-page-bg-dark:var(--tw-coal-200)]
                 [--tw-content-bg:var(--tw-light)] [--tw-content-bg-dark:var(--tw-coal-500)]

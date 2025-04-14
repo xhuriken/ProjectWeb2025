@@ -84,7 +84,6 @@ Route::middleware('auth')->group(function () {
             ->name('retros.ajaxUpdateElementColumn');
         Route::post('/retros/ajax-delete-column', [RetroController::class, 'ajaxDeleteColumn'])
             ->name('retros.ajaxDeleteColumn');
-
         Route::post('/retros/ajax-delete-element', [RetroController::class, 'ajaxDeleteElement'])
             ->name('retros.ajaxDeleteElement');
     });

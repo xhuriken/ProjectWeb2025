@@ -10439,16 +10439,15 @@ process.umask = function() { return 0; };
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _bootstrap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
-/* harmony import */ var _kanban__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./kanban */ "./resources/js/kanban.js");
-/* harmony import */ var _kanban__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_kanban__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var alpinejs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! alpinejs */ "./node_modules/alpinejs/dist/module.esm.js");
-/* harmony import */ var _generationManager__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./generationManager */ "./resources/js/generationManager.js");
-/* harmony import */ var _generationManager__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_generationManager__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var alpinejs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! alpinejs */ "./node_modules/alpinejs/dist/module.esm.js");
+/* harmony import */ var _generationManager__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./generationManager */ "./resources/js/generationManager.js");
+/* harmony import */ var _generationManager__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_generationManager__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _kanban__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./kanban */ "./resources/js/kanban.js");
+/* harmony import */ var _kanban__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_kanban__WEBPACK_IMPORTED_MODULE_3__);
 
 
-
-window.Alpine = alpinejs__WEBPACK_IMPORTED_MODULE_2__["default"];
-alpinejs__WEBPACK_IMPORTED_MODULE_2__["default"].start();
+window.Alpine = alpinejs__WEBPACK_IMPORTED_MODULE_1__["default"];
+alpinejs__WEBPACK_IMPORTED_MODULE_1__["default"].start();
 
 //Js for manage generation, (used in cohort > show.blade.php)
 
@@ -11079,6 +11078,34 @@ function updateCardToDB(boardDiv, elementId) {
     return console.error(err);
   });
 }
+
+//PUSHER !!
+var pusher = new Pusher('31eab710babcb78d914d', {
+  cluster: 'eu'
+});
+var channel = pusher.subscribe('project-web');
+channel.bind('add-card', function (data) {
+  console.log('Pusher add-card event received:', data);
+  channel.bind('add-card', function (data) {
+    console.log('add-card event:', data);
+    var card = data.card;
+    var boardId = 'column_' + card.column_id;
+    for (var retroId in allKanbans) {
+      var kanbanInstance = allKanbans[retroId];
+      var foundBoard = kanbanInstance.options.boards.find(function (b) {
+        return b.id === boardId;
+      });
+      if (foundBoard) {
+        kanbanInstance.addElement(boardId, {
+          id: 'elem_' + card.id,
+          title: card.title
+        });
+        console.log('Carte ajouter mon frrr dans : ', boardId);
+        break;
+      }
+    }
+  });
+});
 
 /***/ }),
 

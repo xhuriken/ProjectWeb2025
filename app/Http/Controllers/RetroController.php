@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AddCardEvent;
 use App\Models\Cohort;
 use App\Models\Retro;
 use App\Models\RetrosColumn;
@@ -97,19 +98,27 @@ class RetroController extends Controller
     public function ajaxStoreElement(Request $request)
     {
         $request->validate([
-            'retro_id'     => 'required|exists:retros,id',
-            'column_id'    => 'required|exists:retros_columns,id',
-            'title'        => 'required|string|max:255'
+            'retro_id' => 'required|exists:retros,id',
+            'column_id' => 'required|exists:retros_columns,id',
+            'title' => 'required|string|max:255'
         ]);
 
         $elem = RetrosElement::create([
-            'retro_id'         => $request->retro_id,
+            'retro_id' => $request->retro_id,
             'retros_column_id' => $request->column_id,
-            'title'            => $request->title
+            'title' => $request->title
         ]);
 
+        // Pusher
+        event(new AddCardEvent([
+            'id' => $elem->id,
+            'column_id' => $request->column_id,
+            'title' => $request->title
+        ]));
+        \Log::info('Event AddCardEvent triggered');
+
         return response()->json([
-            'success'    => true,
+            'success' => true,
             'element_id' => $elem->id
         ]);
     }
