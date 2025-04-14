@@ -10664,6 +10664,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
 var KanbanConstructor = window.jKanban;
 var allKanbans = {};
 
+// for dbl click and single click
+// make timer
+
 // For onClick in blade
 window.addColumn = addColumn;
 window.addElement = addElement;
@@ -10730,15 +10733,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         allKanbans[r.retro_id] = kanbanInstance;
 
-        // Double click: delete card.
-        containerEl.addEventListener('dblclick', function (ev) {
-          var itemDom = ev.target.closest('.kanban-item');
-          if (!itemDom) return;
-          var itemId = itemDom.getAttribute('data-eid');
-          if (!itemId) return;
-          var elementDbId = itemId.replace('elem_', '');
-          deleteElement(itemDom, elementDbId, r.retro_id);
-        });
+        // // Double click: delete card.
+        // containerEl.addEventListener('dblclick', ev => {
+        //     const itemDom = ev.target.closest('.kanban-item');
+        //     if (!itemDom) return;
+        //     const itemId = itemDom.getAttribute('data-eid');
+        //     if (!itemId) return;
+        //     const elementDbId = itemId.replace('elem_', '');
+        //     deleteElement(itemDom, elementDbId, r.retro_id);
+        // });
       }
     });
   });
@@ -10850,6 +10853,8 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // Edit a card (single click).
+// IF THE TEXT IS EMPTY OR WITH ONLY SPACE DELETE THIS CARD
+// devlog: it was so difficult to make dbl click event with click event before
 function editElement(itemDom, elementDbId, retroId) {
   var oldText = itemDom.textContent.trim();
   Swal.fire({
@@ -10860,7 +10865,58 @@ function editElement(itemDom, elementDbId, retroId) {
     confirmButtonText: 'Save',
     cancelButtonText: 'Cancel'
   }).then(function (res) {
-    if (res.isConfirmed && res.value) {
+    if (!res.isConfirmed) return;
+    var newText = res.value.trim();
+    if (newText === '') {
+      // If is empty, delete the card
+      Swal.fire({
+        title: 'Delete this card?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+      }).then(function (confirmDelete) {
+        if (confirmDelete.isConfirmed) {
+          fetch(window.deleteElementUrl, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': window.csrf,
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              retro_id: retroId,
+              element_id: elementDbId
+            })
+          }).then(function (r) {
+            return r.json();
+          }).then(function (data) {
+            if (data.success) {
+              var instance = allKanbans[retroId];
+              if (instance) {
+                instance.removeElement(itemDom);
+              }
+              Swal.fire({
+                icon: 'success',
+                title: 'Card deleted',
+                timer: 1500,
+                showConfirmButton: false
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.error || 'Unknown error'
+              });
+            }
+          })["catch"](function (err) {
+            return console.error(err);
+          });
+        }
+      });
+    } else {
+      // Else we rename the card
       fetch(window.renameElementUrl, {
         method: 'POST',
         headers: {
@@ -10871,13 +10927,13 @@ function editElement(itemDom, elementDbId, retroId) {
         body: JSON.stringify({
           retro_id: retroId,
           element_id: elementDbId,
-          new_title: res.value
+          new_title: newText
         })
       }).then(function (r) {
         return r.json();
       }).then(function (data) {
         if (data.success) {
-          itemDom.textContent = res.value;
+          itemDom.textContent = newText;
           Swal.fire({
             icon: 'success',
             title: 'Card updated',
@@ -10888,56 +10944,6 @@ function editElement(itemDom, elementDbId, retroId) {
           Swal.fire({
             icon: 'error',
             title: 'Error (edit)',
-            text: data.error || 'Unknown error'
-          });
-        }
-      })["catch"](function (err) {
-        return console.error(err);
-      });
-    }
-  });
-}
-
-// Delete a card (double click).
-function deleteElement(itemDom, elementDbId, retroId) {
-  Swal.fire({
-    title: 'Delete this card?',
-    text: 'This action cannot be undone.',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Yes, delete it!',
-    cancelButtonText: 'Cancel'
-  }).then(function (res) {
-    if (res.isConfirmed) {
-      fetch(window.deleteElementUrl, {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': window.csrf,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          retro_id: retroId,
-          element_id: elementDbId
-        })
-      }).then(function (r) {
-        return r.json();
-      }).then(function (data) {
-        if (data.success) {
-          var instance = allKanbans[retroId];
-          if (instance) {
-            instance.removeElement(itemDom);
-          }
-          Swal.fire({
-            icon: 'success',
-            title: 'Card deleted',
-            timer: 1500,
-            showConfirmButton: false
-          });
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
             text: data.error || 'Unknown error'
           });
         }

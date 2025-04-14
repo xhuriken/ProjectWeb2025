@@ -2,6 +2,9 @@
 const KanbanConstructor = window.jKanban;
 const allKanbans = {};
 
+// for dbl click and single click
+// make timer
+
 // For onClick in blade
 window.addColumn = addColumn;
 window.addElement = addElement;
@@ -71,15 +74,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     allKanbans[r.retro_id] = kanbanInstance;
 
-                    // Double click: delete card.
-                    containerEl.addEventListener('dblclick', ev => {
-                        const itemDom = ev.target.closest('.kanban-item');
-                        if (!itemDom) return;
-                        const itemId = itemDom.getAttribute('data-eid');
-                        if (!itemId) return;
-                        const elementDbId = itemId.replace('elem_', '');
-                        deleteElement(itemDom, elementDbId, r.retro_id);
-                    });
+                    // // Double click: delete card.
+                    // containerEl.addEventListener('dblclick', ev => {
+                    //     const itemDom = ev.target.closest('.kanban-item');
+                    //     if (!itemDom) return;
+                    //     const itemId = itemDom.getAttribute('data-eid');
+                    //     if (!itemId) return;
+                    //     const elementDbId = itemId.replace('elem_', '');
+                    //     deleteElement(itemDom, elementDbId, r.retro_id);
+                    // });
                 }
             });
         });
@@ -182,6 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Edit a card (single click).
+// IF THE TEXT IS EMPTY OR WITH ONLY SPACE DELETE THIS CARD
+// devlog: it was so difficult to make dbl click event with click event before
 function editElement(itemDom, elementDbId, retroId) {
     const oldText = itemDom.textContent.trim();
     Swal.fire({
@@ -192,7 +197,60 @@ function editElement(itemDom, elementDbId, retroId) {
         confirmButtonText: 'Save',
         cancelButtonText: 'Cancel'
     }).then(res => {
-        if (res.isConfirmed && res.value) {
+        if (!res.isConfirmed) return;
+
+        const newText = res.value.trim();
+
+        if (newText === '') {
+            // If is empty, delete the card
+            Swal.fire({
+                title: 'Delete this card?',
+                text: 'This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then(confirmDelete => {
+                if (confirmDelete.isConfirmed) {
+                    fetch(window.deleteElementUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': window.csrf,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            retro_id: retroId,
+                            element_id: elementDbId
+                        })
+                    })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                const instance = allKanbans[retroId];
+                                if (instance) {
+                                    instance.removeElement(itemDom);
+                                }
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Card deleted',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: data.error || 'Unknown error'
+                                });
+                            }
+                        })
+                        .catch(err => console.error(err));
+                }
+            });
+
+        } else {
+            // Else we rename the card
             fetch(window.renameElementUrl, {
                 method: 'POST',
                 headers: {
@@ -203,13 +261,13 @@ function editElement(itemDom, elementDbId, retroId) {
                 body: JSON.stringify({
                     retro_id: retroId,
                     element_id: elementDbId,
-                    new_title: res.value
+                    new_title: newText
                 })
             })
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        itemDom.textContent = res.value;
+                        itemDom.textContent = newText;
                         Swal.fire({
                             icon: 'success',
                             title: 'Card updated',
@@ -220,55 +278,6 @@ function editElement(itemDom, elementDbId, retroId) {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error (edit)',
-                            text: data.error || 'Unknown error'
-                        });
-                    }
-                })
-                .catch(err => console.error(err));
-        }
-    });
-}
-
-// Delete a card (double click).
-function deleteElement(itemDom, elementDbId, retroId) {
-    Swal.fire({
-        title: 'Delete this card?',
-        text: 'This action cannot be undone.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel'
-    }).then(res => {
-        if (res.isConfirmed) {
-            fetch(window.deleteElementUrl, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': window.csrf,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    retro_id: retroId,
-                    element_id: elementDbId
-                })
-            })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        const instance = allKanbans[retroId];
-                        if (instance) {
-                            instance.removeElement(itemDom);
-                        }
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Card deleted',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
                             text: data.error || 'Unknown error'
                         });
                     }
