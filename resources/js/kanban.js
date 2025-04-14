@@ -26,7 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         responsivePercentage: false,
                         dragItems: true,
                         dragBoards: false,
-                        boards: r.boards || [],
+                        boards: r.boards.map(board => ({
+                            id: board.id,
+                            title: board.title,
+                            item: []
+                        })),
                         itemAddOptions: {
                             enabled: true,
                             content: '+ Ajouter une carte',
@@ -70,6 +74,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     allKanbans[r.retro_id] = kanbanInstance;
+
+                    r.boards.forEach(board => {
+                        board.item.forEach(card => {
+                            kanbanInstance.addElement(board.id, {
+                                id: 'elem_' + card.id,
+                                title: card.title
+                            });
+                        });
+                    });
 
                 }
             });
@@ -460,7 +473,69 @@ channel.bind('delete-card', function(data) {
     }
 });
 
+/*
+  rename-card
+  We just update the card's text
+*/
+channel.bind('rename-card', function(data) {
+    console.log('[Pusher] rename-card:', data);
+    const card = data.card;
+    if (!card) return;
 
+    // We look in all boards, find the item, update its text
+    for (const retroId in allKanbans) {
+        const kanbanInstance = allKanbans[retroId];
+        kanbanInstance.options.boards.forEach(board => {
+            const boardId = board.id;
+            const items = kanbanInstance.getBoardElements(boardId);
+            for (const item of items) {
+                if (item.getAttribute('data-eid') === 'elem_' + card.id) {
+                    item.textContent = card.title;
+                }
+            }
+        });
+    }
+});
+
+/*
+  move-card
+  We remove the card from old board, then add it to new board
+*/
+channel.bind('move-card', function(data) {
+    console.log('[Pusher] move-card:', data);
+    const card = data.card;
+    if (!card) return;
+
+    for (const retroId in allKanbans) {
+        const kanbanInstance = allKanbans[retroId];
+
+        let foundItem = null;
+        let oldBoardId = null;
+
+        // Find the item in old board
+        kanbanInstance.options.boards.forEach(board => {
+            const boardId = board.id;
+            const items = kanbanInstance.getBoardElements(boardId);
+            for (const item of items) {
+                if (item.getAttribute('data-eid') === 'elem_' + card.id) {
+                    foundItem = item;
+                    oldBoardId = boardId;
+                }
+            }
+        });
+
+        // Remove from old board and add to new one
+        if (foundItem) {
+            kanbanInstance.removeElement(foundItem);
+            const newBoardId = 'column_' + card.column_id;
+            kanbanInstance.addElement(newBoardId, {
+                id: 'elem_' + card.id,
+                title: foundItem.textContent.trim()
+            });
+            break;
+        }
+    }
+});
 
 /*
   add-column
