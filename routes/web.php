@@ -78,8 +78,15 @@ Route::middleware('auth')->group(function () {
         Route::post('/retros/ajax-store', [RetroController::class, 'ajaxStore'])->name('retros.ajaxStore');
         Route::post('/retros/ajax-store-column', [RetroController::class, 'ajaxStoreColumn'])->name('retros.ajaxStoreColumn');
         Route::post('/retros/ajax-store-element', [RetroController::class, 'ajaxStoreElement'])->name('retros.ajaxStoreElement');
+        Route::post('/retros/ajax-rename-element', [RetroController::class, 'ajaxRenameElement'])
+            ->name('retros.ajaxRenameElement');
         Route::post('/retros/ajax-update-element-column', [RetroController::class, 'ajaxUpdateElementColumn'])
             ->name('retros.ajaxUpdateElementColumn');
+        Route::post('/retros/ajax-delete-column', [RetroController::class, 'ajaxDeleteColumn'])
+            ->name('retros.ajaxDeleteColumn');
+
+        Route::post('/retros/ajax-delete-element', [RetroController::class, 'ajaxDeleteElement'])
+            ->name('retros.ajaxDeleteElement');
     });
 
 });

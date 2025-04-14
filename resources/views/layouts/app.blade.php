@@ -11,6 +11,7 @@
     <link href="{{ asset('metronic/vendors/apexcharts/apexcharts.css') }}" rel="stylesheet"/>
     <link href="{{ asset('metronic/vendors/keenicons/styles.bundle.css') }}" rel="stylesheet"/>
     <link href="{{ asset('metronic/css/styles.css') }}" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="antialiased flex h-full text-base text-gray-700 [--tw-page-bg:#F6F6F9] [--tw-page-bg-dark:var(--tw-coal-200)]
                 [--tw-content-bg:var(--tw-light)] [--tw-content-bg-dark:var(--tw-coal-500)]
@@ -81,12 +82,19 @@
 <!-- End of Page -->
 
 <!-- Scripts -->
+{{--<script--}}
+{{--    src="https://code.jquery.com/jquery-3.7.1.min.js"--}}
+{{--    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="--}}
+{{--    crossorigin="anonymous"></script>--}}
 <script src='https://cdnjs.cloudflare.com/ajax/libs/dragula/$VERSION/dragula.min.js'></script>
 <script src="{{ asset('metronic/js/core.bundle.js') }}"></script>
 <script src="{{ asset('metronic/vendors/apexcharts/apexcharts.min.js') }}"></script>
 <script src="{{ asset('metronic/js/widgets/general.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('js/app.js') }}"></script>
+<script src="https://kit.fontawesome.com/d2592aca38.js" crossorigin="anonymous"></script>
+{{--<style>--}}
+{{--    html.swal2-shown,body.swal2-shown { overflow-y: hidden !important; height: auto!important;}--}}
+{{--</style>--}}
 <script>
     window.csrf = "{{ csrf_token() }}";
 </script>

@@ -75,7 +75,7 @@ class RetroController extends Controller
             'title'     => $request->title,
         ]);
 
-        $defaultColumns = ['J\'ai aimé', 'Je n\'ai pas aimé', 'A améliorer', 'Inès', 'J\'ai appris', 'Autre..'];
+        $defaultColumns = ["J'ai aimé", "Je n'ai pas aimé", "A améliorer", "Inès", "J'ai appris", "Autre.."];
         foreach ($defaultColumns as $colTitle) {
             RetrosColumn::create([
                 'retro_id' => $retro->id,
@@ -138,9 +138,7 @@ class RetroController extends Controller
     }
 
     /**
-     * Update element in new colomn (for drag and drop)
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Update an element in a new column (for drag and drop)
      */
     public function ajaxUpdateElementColumn(Request $request)
     {
@@ -150,7 +148,9 @@ class RetroController extends Controller
             'column_id'  => 'required|exists:retros_columns,id',
         ]);
 
-        $elem = RetrosElement::findOrFail($request->element_id);
+        $elem = RetrosElement::where('retro_id', $request->retro_id)
+            ->findOrFail($request->element_id);
+
         $elem->retros_column_id = $request->column_id;
         $elem->save();
 
@@ -158,4 +158,54 @@ class RetroController extends Controller
             'success' => true
         ]);
     }
+
+
+    public function ajaxDeleteColumn(Request $request)
+    {
+        $request->validate([
+            'column_id' => 'required|exists:retros_columns,id',
+        ]);
+
+        RetrosColumn::destroy($request->column_id);
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
+
+    public function ajaxDeleteElement(Request $request)
+    {
+        $request->validate([
+            'element_id' => 'required|exists:retros_elements,id',
+        ]);
+
+        RetrosElement::destroy($request->element_id);
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
+
+    /**
+     * Rename an element (title) in the DB
+     */
+    public function ajaxRenameElement(Request $request)
+    {
+        $request->validate([
+            'retro_id'   => 'required|exists:retros,id',
+            'element_id' => 'required|exists:retros_elements,id',
+            'new_title'  => 'required|string|max:255'
+        ]);
+
+        $elem = RetrosElement::findOrFail($request->element_id);
+
+        $elem->title = $request->new_title;
+        $elem->save();
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
+
+
 }

@@ -6,6 +6,7 @@
             </span>
         </h1>
     </x-slot>
+    <link rel="stylesheet" href="{{asset('jkanban/dist/jkanban.css')}}">
 
     {{--    il faut un conteneur qui fasse toute la taille de l'écran avec dedans des bouton ou form--}}
     {{--    Ajouté une retro (on dois l'associer a un cohort specifique paris ceux existant) --}}
@@ -18,21 +19,31 @@
     {{--    retros_element (id, retros_id, content)--}}
     {{--    Plus tard : une liste de tout les kanban existant--}}
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jkanban/dist/jkanban.min.css">
-    <div class="p-4 border-b mb-4">
-        <h2 class="font-bold mb-2">Créer une nouvelle Rétro</h2>
-        <select id="cohort_id" class="border p-1">
-            <option value="">-- Choisissez un cohort --</option>
-            @foreach($cohorts as $cohort)
-                <option value="{{ $cohort->id }}">{{ $cohort->name }}</option>
-            @endforeach
-        </select>
+{{--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jkanban/dist/jkanban.min.css">--}}
+    <div class="p-4 border mb-4 space-y-3 max-w-96">
+        <h2 class="text-lg font-semibold">
+            Créer une nouvelle Rétro
+        </h2>
 
-        <input type="text" id="retro_title" class="border p-1" placeholder="Titre de la rétro" />
+        <div class="flex-col space-x-2 flex gap-1.25">
+            <select id="cohort_id"
+                    class="border border-gray-300 p-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <option value="">-- Choisissez un cohort --</option>
+                @foreach($cohorts as $cohort)
+                    <option value="{{ $cohort->id }}">{{ $cohort->name }}</option>
+                @endforeach
+            </select>
 
-        <button id="createRetroBtn" class="bg-blue-500 text-white px-3 py-1 rounded">
-            Créer
-        </button>
+            <input type="text"
+                   id="retro_title"
+                   class="border border-gray-300 p-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 flex-1"
+                   placeholder="Titre de la rétro" />
+
+            <button id="createRetroBtn"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded focus:outline-none">
+                Créer
+            </button>
+        </div>
     </div>
 
     @foreach($retros as $retro)
@@ -41,7 +52,7 @@
                 [{{ $retro->cohort->name ?? 'Sans Cohort' }}] - {{ $retro->title }}
             </h2>
 
-            <div id="kanban_{{ $retro->id }}" class="kanban-container" style="min-height: 300px;"></div>
+            <div id="kanban_{{ $retro->id }}" class="kanban-container" data-retro="{{ $retro->id }}" style="min-height: 300px;"></div>
 
             <div class="mt-2 flex gap-2">
                 <button onclick="addColumn({{ $retro->id }})"
@@ -54,15 +65,19 @@
 {{--                </button>--}}
             </div>
         </div>
+
     @endforeach
 
-    <script src="https://cdn.jsdelivr.net/npm/jkanban/dist/jkanban.min.js"></script>
-
+    <script src="{{asset("jkanban/dist/jkanban.js")}}"></script>
     <script>
-        window.allajax         = "{{ route('retros.allAjaxData') }}";
-        window.storeRetroUrl   = "{{ route('retros.ajaxStore') }}";
-        window.storeColumnUrl  = "{{ route('retros.ajaxStoreColumn') }}";
-        window.storeElementUrl = "{{ route('retros.ajaxStoreElement') }}";
+        window.userRole = "{{auth()->user()->school()->pivot->role}}";
+        window.allajax             = "{{ route('retros.allAjaxData')             }}";
+        window.storeRetroUrl       = "{{ route('retros.ajaxStore')               }}";
+        window.storeColumnUrl      = "{{ route('retros.ajaxStoreColumn')         }}";
+        window.storeElementUrl     = "{{ route('retros.ajaxStoreElement')        }}";
+        window.renameElementUrl    = "{{ route('retros.ajaxRenameElement')       }}";
         window.updateElementUrl    = "{{ route('retros.ajaxUpdateElementColumn') }}";
+        window.deleteColumnUrl     = "{{ route('retros.ajaxDeleteColumn')        }}";
+        window.deleteElementUrl    = "{{ route('retros.ajaxDeleteElement')       }}";
     </script>
 </x-app-layout>

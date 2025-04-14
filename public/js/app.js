@@ -10660,158 +10660,154 @@ document.addEventListener("DOMContentLoaded", function (event) {
   \********************************/
 /***/ (() => {
 
-// create kanban constructor (i'm not sure why, but i had an error without)
+// Create a Kanban instance using jKanban and store all instances by retro ID.
 var KanbanConstructor = window.jKanban;
-
-// all kaban instance
 var allKanbans = {};
 
-// for onClick() in html;
+// For onClick in blade
 window.addColumn = addColumn;
 window.addElement = addElement;
 document.addEventListener('DOMContentLoaded', function () {
-  if (!window.allajax) {
-    //if whe are in another page
-    return;
-  }
+  if (!window.allajax) return;
 
-  // Fetch all retros
+  // Fetch all retros and initialize each Kanban.
+  // For understand this, pls see https://github.com/riktar/jkanban
   fetch(window.allajax).then(function (res) {
     return res.json();
   }).then(function (retrosData) {
-    // for all retro
     retrosData.forEach(function (r) {
-      // create container kanban_id with retro id
       var containerId = "kanban_" + r.retro_id;
       var containerEl = document.getElementById(containerId);
-
-      // if he exist (all container are charged and create before DOMContentLoaded in blade)
       if (containerEl) {
+        // Initialize jKanban for r retro
         var kanbanInstance = new KanbanConstructor({
           element: "#" + containerId,
+          gutter: '0px',
+          widthBoard: 'auto',
+          responsivePercentage: false,
+          dragItems: true,
+          dragBoards: false,
           boards: r.boards || [],
-          // Add + at the top of the board (see Jkanban doc)
           itemAddOptions: {
             enabled: true,
-            content: '+',
-            "class": 'kanban-title-button btn btn-default btn-xs',
-            footer: false
+            content: '+ Add card',
+            "class": 'kanban-title-button w-full justify-start flex text-sm font-medium rounded-lg px-2 py-2 hover:bg-gray-300 duration-300',
+            footer: true
           },
-          // callback for + btn pressed
-          buttonClick: function buttonClick(el, boardId) {
-            // Extract the DB column ID from the board ID
-            var columnDbId = boardId.replace('column_', '');
-
-            // Ask text for this element
-            Swal.fire({
-              title: 'Nouvel élément',
-              input: 'text',
-              showCancelButton: true,
-              confirmButtonText: 'Ajouter',
-              cancelButtonText: 'Annuler'
-            }).then(function (result) {
-              if (result.isConfirmed && result.value) {
-                // Send it
-                fetch(window.storeElementUrl, {
-                  method: 'POST',
-                  headers: {
-                    'X-CSRF-TOKEN': window.csrf,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({
-                    retro_id: r.retro_id,
-                    column_id: columnDbId,
-                    title: result.value
-                  })
-                }).then(function (resp) {
-                  return resp.json();
-                }).then(function (data) {
-                  if (data.success) {
-                    // Add the item to the board visually
-                    kanbanInstance.addElement(boardId, {
-                      id: 'elem_' + data.element_id,
-                      title: result.value
-                    });
-                  } else {
-                    // error :/
-                    Swal.fire({
-                      icon: 'error',
-                      title: 'Erreur',
-                      text: data.error || 'inconnue'
-                    });
-                  }
-                })["catch"](function (err) {
-                  return console.error(err);
-                });
-              }
-            });
+          itemHandleOptions: {
+            enabled: false,
+            handleClass: "item_handle",
+            customCssHandler: "drag_handler",
+            customCssIconHandler: "drag_handler_icon",
+            customHandler: "<span class='item_handle'>+</span> %title%"
           },
-          // Callback for drag and drop !
-          dropEl: function dropEl(el, target, source, sibling) {
-            // item ID is stored in data-eid, like "elem_12"
-            var itemIdAttr = el.getAttribute('data-eid');
-            // security check (but now it working well, this is useless)
-            if (!itemIdAttr) {
-              console.warn("Cannot find item ID in data-eid");
-              return;
+          // Single click: edit card
+          click: function click(el) {
+            var itemId = el.getAttribute('data-eid');
+            if (!itemId) return;
+            var elementDbId = itemId.replace('elem_', '');
+            // Get retro id from the container
+            var container = el.closest('.kanban-container');
+            while (container && !container.id.startsWith("kanban_")) {
+              container = container.parentElement;
             }
-            var elementDbId = itemIdAttr.replace('elem_', '');
-
-            // Identify the new board column
-            var boardDiv = target.parentElement;
-            var boardId = boardDiv.dataset.id;
-            var colDbId = boardId.replace('column_', '');
-
-            // Save the new column for this item in the DB
-            fetch(window.updateElementUrl, {
-              method: 'POST',
-              headers: {
-                'X-CSRF-TOKEN': window.csrf,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                retro_id: r.retro_id,
-                element_id: elementDbId,
-                column_id: colDbId
-              })
-            }).then(function (resp) {
-              return resp.json();
-            }).then(function (data) {
-              // If something went wrong, display an error
-              if (!data.success) {
-                Swal.fire({
-                  icon: 'error',
-                  title: 'Erreur de déplacement',
-                  text: data.error || 'inconnue'
-                });
-              }
-            })["catch"](function (err) {
-              return console.error("Erreur updateElementColumn:", err);
-            });
-          }
+            if (!container) return;
+            var retroId = container.id.replace('kanban_', '');
+            editElement(el, elementDbId, retroId);
+          },
+          // Callback for item drop (drag and drop)
+          dropEl: function dropEl(el, target) {
+            var elementId = el.getAttribute('data-eid');
+            if (!elementId) return;
+            var pureId = parseInt(elementId.match(/\d+$/)[0]);
+            updateCardToDB(target.parentElement, pureId);
+          },
+          // Click on footer button to add a new card.
+          buttonClick: function buttonClick(el, boardId) {
+            addElement(boardId, el);
+          },
+          propagationHandlers: []
         });
-
-        // Store this Kanban instance in the dictionary
         allKanbans[r.retro_id] = kanbanInstance;
+
+        // Double click: delete card.
+        containerEl.addEventListener('dblclick', function (ev) {
+          var itemDom = ev.target.closest('.kanban-item');
+          if (!itemDom) return;
+          var itemId = itemDom.getAttribute('data-eid');
+          if (!itemId) return;
+          var elementDbId = itemId.replace('elem_', '');
+          deleteElement(itemDom, elementDbId, r.retro_id);
+        });
       }
     });
   });
 
-  // Listen for clicks on the "Create a new Retro" button
+  // Global click listener for board deletion (admin only). (in future, professor who create this kanban)
+  document.addEventListener('click', function (e) {
+    if (window.userRole !== 'admin') return;
+    if (e.target.classList.contains('ki-trash')) {
+      var boardDiv = e.target.closest('.kanban-board');
+      if (!boardDiv) return;
+      var boardIdAttr = boardDiv.dataset.id; // e.g. "column_XX"
+      var columnDbId = boardIdAttr.replace('column_', '');
+
+      // Use parent chain to get the correct container.
+      var innerContainer = boardDiv.closest('.kanban-container');
+      var containerDom = innerContainer.parentElement && innerContainer.parentElement.closest('.kanban-container');
+      if (!containerDom) return;
+      var retroId = containerDom.id.replace('kanban_', '');
+
+      // Ajax call to delete the column.
+      fetch(window.deleteColumnUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': window.csrf,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          column_id: columnDbId
+        })
+      }).then(function (r) {
+        return r.json();
+      }).then(function (data) {
+        if (data.success) {
+          var kanban = allKanbans[retroId];
+          if (kanban) {
+            kanban.removeBoard(boardIdAttr);
+          }
+          Swal.fire({
+            icon: 'success',
+            title: 'Column deleted',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.error || 'Unknown error'
+          });
+        }
+      })["catch"](function (err) {
+        return console.error(err);
+      });
+    }
+  });
+
+  // Listener for "Create a new Retro" button.
   var createBtn = document.getElementById("createRetroBtn");
   if (createBtn) {
-    createBtn.addEventListener('click', function () {
+    createBtn.addEventListener('click', function (e) {
+      e.preventDefault();
       var cohortId = document.getElementById("cohort_id").value;
       var retroTitle = document.getElementById("retro_title").value.trim();
       if (!cohortId || !retroTitle) {
         Swal.fire({
           icon: 'warning',
-          title: 'Champs manquants',
-          text: 'Merci de remplir le Cohort et le titre'
+          title: 'Missing fields',
+          text: 'Please fill in Cohort and Title'
         });
         return;
       }
@@ -10833,19 +10829,17 @@ document.addEventListener('DOMContentLoaded', function () {
         if (data.success) {
           Swal.fire({
             icon: 'success',
-            title: 'Rétro créée avec succès !',
+            title: 'Retro created successfully!',
             timer: 2000,
             showConfirmButton: false
           }).then(function () {
-            //TODO:
-            // Charge it in DOM
-            location.reload();
+            return location.reload();
           });
         } else {
           Swal.fire({
             icon: 'error',
-            title: 'Erreur',
-            text: data.error || 'inconnue'
+            title: 'Error',
+            text: data.error || 'Unknown error'
           });
         }
       })["catch"](function (err) {
@@ -10855,29 +10849,125 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-/**
- *  Add a new column for a specific retro
- */
+// Edit a card (single click).
+function editElement(itemDom, elementDbId, retroId) {
+  var oldText = itemDom.textContent.trim();
+  Swal.fire({
+    title: 'Edit card',
+    input: 'text',
+    inputValue: oldText,
+    showCancelButton: true,
+    confirmButtonText: 'Save',
+    cancelButtonText: 'Cancel'
+  }).then(function (res) {
+    if (res.isConfirmed && res.value) {
+      fetch(window.renameElementUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': window.csrf,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          retro_id: retroId,
+          element_id: elementDbId,
+          new_title: res.value
+        })
+      }).then(function (r) {
+        return r.json();
+      }).then(function (data) {
+        if (data.success) {
+          itemDom.textContent = res.value;
+          Swal.fire({
+            icon: 'success',
+            title: 'Card updated',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error (edit)',
+            text: data.error || 'Unknown error'
+          });
+        }
+      })["catch"](function (err) {
+        return console.error(err);
+      });
+    }
+  });
+}
+
+// Delete a card (double click).
+function deleteElement(itemDom, elementDbId, retroId) {
+  Swal.fire({
+    title: 'Delete this card?',
+    text: 'This action cannot be undone.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, delete it!',
+    cancelButtonText: 'Cancel'
+  }).then(function (res) {
+    if (res.isConfirmed) {
+      fetch(window.deleteElementUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': window.csrf,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          retro_id: retroId,
+          element_id: elementDbId
+        })
+      }).then(function (r) {
+        return r.json();
+      }).then(function (data) {
+        if (data.success) {
+          var instance = allKanbans[retroId];
+          if (instance) {
+            instance.removeElement(itemDom);
+          }
+          Swal.fire({
+            icon: 'success',
+            title: 'Card deleted',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.error || 'Unknown error'
+          });
+        }
+      })["catch"](function (err) {
+        return console.error(err);
+      });
+    }
+  });
+}
+
+// Add a new column to a retro.
 function addColumn(retroId) {
   var kanban = allKanbans[retroId];
   if (!kanban) {
-    console.error("Kanban not found for retro ID=", retroId);
+    console.error("No Kanban for retro ID:", retroId);
     return;
   }
   Swal.fire({
-    title: 'Nouvelle colonne',
-    text: 'Entrez le nom de la colonne',
+    title: 'New column',
+    text: 'Enter column name',
     input: 'text',
     showCancelButton: true,
-    confirmButtonText: 'Créer',
-    cancelButtonText: 'Annuler'
+    confirmButtonText: 'Create',
+    cancelButtonText: 'Cancel'
   }).then(function (res) {
     if (res.isConfirmed && res.value) {
       fetch(window.storeColumnUrl, {
         method: 'POST',
         headers: {
           'X-CSRF-TOKEN': window.csrf,
-          'X-Requested-With': 'XMLHttpRequest',
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
@@ -10896,19 +10986,17 @@ function addColumn(retroId) {
             title: res.value,
             item: []
           }]);
-
-          // Swal.fire({
-          //     icon: 'success',
-          //     title: 'Colonne ajoutée !',
-          //     timer: 2000,
-          //     showConfirmButton: false
-          // });
+          Swal.fire({
+            icon: 'success',
+            title: 'Column added',
+            timer: 2000,
+            showConfirmButton: false
+          });
         } else {
-          // Show error message
           Swal.fire({
             icon: 'error',
-            title: 'Erreur',
-            text: data.error || 'inconnue'
+            title: 'Error',
+            text: data.error || 'Unknown error'
           });
         }
       })["catch"](function (err) {
@@ -10918,86 +11006,108 @@ function addColumn(retroId) {
   });
 }
 
-/**
- * Add a new element to a specific retro (inused now, i made it with callback + brn)
- * @param retroId
- */
-function addElement(retroId) {
-  var kanban = allKanbans[retroId];
-  if (!kanban) {
-    console.error("Kanban not found for retro ID=", retroId);
+// Add a new card to a board.
+function addElement(boardId, el) {
+  var columnDbId = boardId.replace('column_', '');
+  var foundRetroId = null;
+  for (var rid in allKanbans) {
+    var k = allKanbans[rid];
+    var foundBoard = k.options.boards.find(function (b) {
+      return b.id === boardId;
+    });
+    if (foundBoard) {
+      foundRetroId = rid;
+      break;
+    }
+  }
+  if (!foundRetroId) {
+    console.warn("No retro found for boardId:", boardId);
     return;
   }
-
-  // Get the current boards to list them in a select
-  var boardsInfo = kanban.options.boards || [];
-  var inputOptions = {};
-  boardsInfo.forEach(function (b) {
-    inputOptions[b.id] = b.title;
-  });
-
-  // Ask the user which board (column) they want
   Swal.fire({
-    title: 'Nouvel élément',
-    text: 'Choisissez la colonne :',
-    input: 'select',
-    inputOptions: inputOptions,
-    inputPlaceholder: 'Sélectionnez une colonne',
+    title: 'New card',
+    input: 'text',
     showCancelButton: true,
-    confirmButtonText: 'Suivant',
-    cancelButtonText: 'Annuler'
-  }).then(function (colResult) {
-    if (colResult.isConfirmed && colResult.value) {
-      var chosenBoardId = colResult.value;
-      var colDbId = chosenBoardId.replace('column_', '');
-
-      // Then ask for the item title
-      Swal.fire({
-        title: 'Titre de l’élément',
-        input: 'text',
-        showCancelButton: true,
-        confirmButtonText: 'Ajouter',
-        cancelButtonText: 'Annuler'
-      }).then(function (itemResult) {
-        if (itemResult.isConfirmed && itemResult.value) {
-          //save this item
-          fetch(window.storeElementUrl, {
-            method: 'POST',
-            headers: {
-              'X-CSRF-TOKEN': window.csrf,
-              'X-Requested-With': 'XMLHttpRequest',
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              retro_id: retroId,
-              column_id: colDbId,
-              title: itemResult.value
-            })
-          }).then(function (r) {
-            return r.json();
-          }).then(function (data) {
-            //Add new element
-            if (data.success) {
-              kanban.addElement(chosenBoardId, {
-                id: 'elem_' + data.element_id,
-                title: itemResult.value
-              });
-              //no alert here (it was annoying)
-            } else {
-              //if something gone wrong
-              Swal.fire({
-                icon: 'error',
-                title: 'Erreur',
-                text: data.error || 'inconnue'
-              });
-            }
-          })["catch"](function (err) {
-            return console.error(err);
+    confirmButtonText: 'Add',
+    cancelButtonText: 'Cancel'
+  }).then(function (result) {
+    if (result.isConfirmed && result.value) {
+      fetch(window.storeElementUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': window.csrf,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          retro_id: foundRetroId,
+          column_id: columnDbId,
+          title: result.value
+        })
+      }).then(function (r) {
+        return r.json();
+      }).then(function (data) {
+        if (data.success) {
+          var instance = allKanbans[foundRetroId];
+          instance.addElement(boardId, {
+            id: 'elem_' + data.element_id,
+            title: result.value
+          });
+          Swal.fire({
+            icon: 'success',
+            title: 'Card added',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.error || 'Unknown error'
           });
         }
+      })["catch"](function (err) {
+        return console.error(err);
       });
     }
+  });
+}
+
+// Update card movement in the DB.
+function updateCardToDB(boardDiv, elementId) {
+  var boardId = boardDiv.dataset.id;
+  var colDbId = boardId.replace('column_', '');
+  var innerContainer = boardDiv.closest('.kanban-container');
+  var containerDom = innerContainer.parentElement && innerContainer.parentElement.closest('.kanban-container');
+  if (!containerDom) {
+    console.warn("No container found");
+    return;
+  }
+  var retroId = containerDom.id.replace('kanban_', '');
+  fetch(window.updateElementUrl, {
+    method: 'POST',
+    headers: {
+      'X-CSRF-TOKEN': window.csrf,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      retro_id: retroId,
+      element_id: elementId,
+      column_id: colDbId
+    })
+  }).then(function (r) {
+    return r.json();
+  }).then(function (data) {
+    if (!data.success) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Move error',
+        text: data.error || 'Unknown error'
+      });
+    }
+  })["catch"](function (err) {
+    return console.error(err);
   });
 }
 
