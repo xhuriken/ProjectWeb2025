@@ -2,9 +2,6 @@
 const KanbanConstructor = window.jKanban;
 const allKanbans = {};
 
-// for dbl click and single click
-// make timer
-
 // For onClick in blade
 window.addColumn = addColumn;
 window.addElement = addElement;
@@ -32,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         boards: r.boards || [],
                         itemAddOptions: {
                             enabled: true,
-                            content: '+ Add card',
+                            content: '+ Ajouter une carte',
                             class: 'kanban-title-button w-full justify-start flex text-sm font-medium rounded-lg px-2 py-2 hover:bg-gray-300 duration-300',
                             footer: true
                         },
@@ -112,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         Swal.fire({
                             icon: 'success',
-                            title: 'Column deleted',
+                            title: 'Colonne supprimé !',
                             timer: 2000,
                             showConfirmButton: false
                         });
@@ -138,8 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!cohortId || !retroTitle) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Missing fields',
-                    text: 'Please fill in Cohort and Title'
+                    title: 'Champs Manquant',
+                    text: 'Veuillez compléter la promotion et le titre.'
                 });
                 return;
             }
@@ -158,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.success) {
                         Swal.fire({
                             icon: 'success',
-                            title: 'Retro created successfully!',
+                            title: 'Retro créé avec succès !',
                             timer: 2000,
                             showConfirmButton: false
                         }).then(() => location.reload());
@@ -181,12 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
 function editElement(itemDom, elementDbId, retroId) {
     const oldText = itemDom.textContent.trim();
     Swal.fire({
-        title: 'Edit card',
+        title: 'Modifier (Vide pour supprimer)',
         input: 'text',
         inputValue: oldText,
         showCancelButton: true,
-        confirmButtonText: 'Save',
-        cancelButtonText: 'Cancel'
+        confirmButtonText: 'Appliquer',
+        cancelButtonText: 'Annuler'
     }).then(res => {
         if (!res.isConfirmed) return;
 
@@ -195,12 +192,12 @@ function editElement(itemDom, elementDbId, retroId) {
         if (newText === '') {
             // If is empty, delete the card
             Swal.fire({
-                title: 'Delete this card?',
-                text: 'This action cannot be undone.',
+                title: 'Supprimer cette carte?',
+                text: 'Cette action est irréversible.',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'Cancel'
+                confirmButtonText: 'Supprimer',
+                cancelButtonText: 'Annuler'
             }).then(confirmDelete => {
                 if (confirmDelete.isConfirmed) {
                     fetch(window.deleteElementUrl, {
@@ -274,12 +271,12 @@ function addColumn(retroId) {
         return;
     }
     Swal.fire({
-        title: 'New column',
-        text: 'Enter column name',
+        title: 'Nouvelle Colonne',
+        text: 'Entrez un nom :',
         input: 'text',
         showCancelButton: true,
-        confirmButtonText: 'Create',
-        cancelButtonText: 'Cancel'
+        confirmButtonText: 'Créer',
+        cancelButtonText: 'Annuler'
     }).then(res => {
         if (res.isConfirmed && res.value) {
             fetch(window.storeColumnUrl, {
@@ -297,12 +294,6 @@ function addColumn(retroId) {
                         const colDbId = data.column_id;
                         const newBoardId = 'column_' + colDbId;
                         kanban.addBoards([{ id: newBoardId, title: res.value, item: [] }]);
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Column added',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -333,10 +324,10 @@ function addElement(boardId, el) {
         return;
     }
     Swal.fire({
-        title: 'New card',
+        title: 'Nouvelle Carte',
         input: 'text',
         showCancelButton: true,
-        confirmButtonText: 'Add',
+        confirmButtonText: 'Ajouter',
         cancelButtonText: 'Cancel'
     }).then(result => {
         if (result.isConfirmed && result.value) {
