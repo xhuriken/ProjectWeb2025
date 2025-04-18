@@ -26,6 +26,14 @@ Cependant, par **manque de temps** (j’ai priorisé le développement de mon po
 
 ---
 
+## INFO:
+**Comptes / Connexion :**
+
+| Email                       | Mot de passe | Rôle    |
+|----------------------------|--------------|---------|
+| admin@codingfactory.com    | 123456       | Admin   |
+| teacher@codingfactory.com  | 123456       | Teacher |
+| alice.durand@codingfactory.com | 123456    | Student |
 ## Remerciements
 
 Bon courage pour toutes nos corrections, et merci pour cette année ! 🙏
