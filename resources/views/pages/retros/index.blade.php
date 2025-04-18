@@ -20,6 +20,8 @@
     {{--    Plus tard : une liste de tout les kanban existant--}}
 
 {{--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jkanban/dist/jkanban.min.css">--}}
+{{--    Pas de policies :/--}}
+    @if(auth()->user()->school()->pivot->role != 'student')
     <div class="p-4 border mb-4 space-y-3 max-w-96">
         <h2 class="text-lg font-semibold">
             Créer une nouvelle Rétro
@@ -28,7 +30,7 @@
         <div class="flex-col space-x-2 flex gap-1.25">
             <select id="cohort_id"
                     class="border border-gray-300 p-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
-                <option value="">-- Choisissez un cohort --</option>
+                <option value="">-- Choisissez une promotion --</option>
                 @foreach($cohorts as $cohort)
                     <option value="{{ $cohort->id }}">{{ $cohort->name }}</option>
                 @endforeach
@@ -45,8 +47,8 @@
             </button>
         </div>
     </div>
-
-    @foreach($retros as $retro)
+    @endif
+    @forelse($retros as $retro)
         <div class="mb-8 border-b p-4">
             <h2 class="font-bold mb-2">
                 [{{ $retro->cohort->name ?? 'Sans Cohort' }}] - {{ $retro->title }}
@@ -59,14 +61,12 @@
                         class="bg-green-600 text-white px-3 py-1 rounded">
                     + Colonne
                 </button>
-{{--                <button onclick="addElement({{ $retro->id }})"--}}
-{{--                        class="bg-gray-700 text-white px-3 py-1 rounded">--}}
-{{--                    + Élément--}}
-{{--                </button>--}}
             </div>
         </div>
+    @empty
+        <p class="text-gray-500 italic">Aucune rétro disponible pour le moment.</p>
+    @endforelse
 
-    @endforeach
 
     <script src="{{asset("jkanban/dist/jkanban.js")}}"></script>
     <script>

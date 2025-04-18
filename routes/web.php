@@ -69,6 +69,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/cohort/{cohort}/delete-generation/{generation}', [CohortController::class, 'deleteGeneration'])->name('groups.deleteGeneration');
 
 
+        //Aucune policies et middleware désolé :/
+
         //
         // RETRO
         //

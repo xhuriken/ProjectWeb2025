@@ -10,6 +10,7 @@ class Retro extends Model
 
     protected $fillable = [
         'cohort_id',
+        'user_id',
         'title',
     ];
 

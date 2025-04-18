@@ -27,8 +27,24 @@ class RetroController extends Controller
      * @return Factory|View|Application|object
      */
     public function index() {
-        $retros = Retro::with('cohort')->get();
+        $user = auth()->user();
+        $role = $user->school()->pivot->role;
 
+        //return all for admin
+        //return only created for teacher
+        //return associate cohort_id for students
+        if ($role === 'admin') {
+            $retros = Retro::with('cohort')->get();
+        } elseif ($role === 'teacher') {
+            $retros = Retro::with('cohort')
+                ->where('user_id', $user->id)
+                ->get();
+        } else {
+            $cohortId = $user->school()->pivot->cohort_id;
+            $retros = Retro::with('cohort')
+                ->where('cohort_id', $cohortId)
+                ->get();
+        }
         $cohorts = Cohort::all();
 
         return view('pages.retros.index', compact('retros', 'cohorts'));
@@ -80,6 +96,7 @@ class RetroController extends Controller
 
         $retro = Retro::create([
             'cohort_id' => $request->cohort_id,
+            'user_id' => auth()->id(),
             'title'     => $request->title,
         ]);
 

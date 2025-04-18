@@ -107,6 +107,7 @@ class DatabaseSeeder extends Seeder
         UserSchool::create([
             'user_id'   => $admin->id,
             'school_id' => $school->id,
+            'cohort_id' => 1,
             'role'      => 'admin'
         ]);
 
@@ -114,6 +115,7 @@ class DatabaseSeeder extends Seeder
         UserSchool::create([
             'user_id'   => $teacher->id,
             'school_id' => $school->id,
+            'cohort_id' => 1,
             'role'      => 'teacher'
         ]);
 
@@ -121,6 +123,7 @@ class DatabaseSeeder extends Seeder
         UserSchool::create([
             'user_id'   => $user->id,
             'school_id' => $school->id,
+            'cohort_id' => 1,
             'role'      => 'student'
         ]);
 
