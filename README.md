@@ -1,100 +1,34 @@
-# 🚀 Coding Tool Box – Guide d'installation
+# Projet Web 2025 – Coding Factory
 
-Bienvenue dans **Coding Tool Box**, un outil complet de gestion pédagogique conçu pour la Coding Factory.  
-Ce projet Laravel inclut la gestion des groupes, promotions, étudiants, rétro (Kanban), QCM  dynamiques, et bien plus.
-
----
-
-## 📦 Prérequis
-
-Assurez-vous d’avoir les éléments suivants installés sur votre machine :
-
-- PHP ≥ 8.1
-- Composer
-- MySQL ou MariaDB
-- Node.js + npm (pour les assets frontend si nécessaire)
-- Laravel CLI (`composer global require laravel/installer`)
+> **Technos utilisées :**  
+> Laravel 12.x • JavaScript natif (avec Webpack) • SweetAlert2 • TailwindCSS
 
 ---
 
-## ⚙️ Installation du projet
+## Description du projet
 
-Exécutez les étapes ci-dessous pour lancer le projet en local :
+Projet de fin d’année réalisé dans le cadre de la formation à la Coding Factory.
 
-### 1. Cloner le dépôt
+L’objectif était de développer une plateforme interne permettant aux membres (administrateurs, professeurs, élèves) d’interagir à travers plusieurs fonctionnalités :
 
-```bash
-git clone https://m_thibaud@bitbucket.org/m_thibaud/projet-web-2025.git
-cd coding-tool-box
-cp .env.example .env
-```
-
-### 2. Configuration de l'environnement
-
-```bash
-✍️ Ouvrez le fichier .env et configurez les paramètres liés à votre base de données :
-
-DB_DATABASE=nom_de_votre_bdd
-DB_USERNAME=utilisateur
-DB_PASSWORD=motdepasse
-```
-
-### 3. Installation des dépendances PHP
-
-```bash
-composer install
-```
-
-### 4. Nettoyage et optimisation du cache
-
-```bash
-php artisan optimize:clear
-```
-
-### 5. Génération de la clé d'application
-
-```bash
-php artisan key:generate
-```
-
-### 6. Migration de la base de données
-
-```bash
-php artisan migrate
-```
-
-### 7. Population de la base (Données de test)
-
-```bash
-php artisan db:seed
-```
+- Administration des promotions d’élèves (affichage, création…)
+- Création et gestion de groupes (au sein d'une promotion)
+- Outils de rétrospectives collaboratives (affichage dynamique en fonction des rôles : admin / prof / élève)
 
 ---
 
-## 💻 Compilation des assets (si nécessaire)
+## Backlog / Avancement
 
-```bash
-npm install
-npm run dev
-```
+L’ensemble des **user stories** du backlog initial ont été respectées.  
+Cependant, par **manque de temps** (j’ai priorisé le développement de mon portfolio), certaines fonctionnalités n’ont pas pu être finalisées ou peaufinées comme je l’aurais souhaité.
 
----
-
-## 👤 Comptes de test disponibles
-
-| Rôle       | Email                         | Mot de passe |
-|------------|-------------------------------|--------------|
-| **Admin**  | admin@codingfactory.com       | 123456       |
-| Enseignant | teacher@codingfactory.com     | 123456       |
-| Étudiant   | student@codingfactory.com     | 123456       |
+> 💡 **Le minimum requis est bien présent et fonctionnel.**
 
 ---
 
-## 🚧 Fonctionnalités principales
+## Remerciements
 
-- 🔧 Gestion des groupes, promotions, étudiants
-- 📅 Vie commune avec système de pointage
-- 📊 Bilans semestriels étudiants via QCM générés par IA
-- 🧠 Génération automatique de QCM par langage sélectionné
-- ✅ Système de Kanban pour les rétrospectives
-- 📈 Statistiques d’usage et suivi pédagogique
+Bon courage pour toutes nos corrections, et merci pour cette année ! 🙏
+
+—
+**Célestin HONVAULT <3**
